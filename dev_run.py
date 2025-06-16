@@ -1,9 +1,5 @@
 from fetcher.fetchers.kesko_fetcher import KRuokaFetcher
 
-#if __name__ == "__main__":
-#    fetcher = KRuokaFetcher()
-#    print(fetcher.fetch_prices())  # Replace with whatever you're testing
-
 def fetch_all_prices():
     fetchers = [KRuokaFetcher()]
     all_prices = []
@@ -18,5 +14,3 @@ def fetch_all_prices():
 if __name__ == "__main__":
     prices = fetch_all_prices()
     print(prices)
-    #for item in prices:
-    #    print(item)
