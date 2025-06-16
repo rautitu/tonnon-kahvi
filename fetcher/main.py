@@ -13,5 +13,6 @@ def fetch_all_prices():
 
 if __name__ == "__main__":
     prices = fetch_all_prices()
-    for item in prices:
-        print(item)
+    print(prices)
+    #for item in prices:
+    #    print(item)
