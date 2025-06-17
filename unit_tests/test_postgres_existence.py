@@ -29,9 +29,7 @@ def main():
         user=os.environ['DB_USER'],
         password=os.environ['DB_PASSWORD']
     )
-    cur = conn.cursor()
-    print(f"TEMP, cur type: {type(cur)}")
-
+    cur: psycopg2.extensions.cursor = conn.cursor()
     try:
         # Step 1.5: drop table if exists
         cur.execute("DROP TABLE IF EXISTS test_table;")
@@ -44,7 +42,7 @@ def main():
 
         # Step 3: Insert row
         cur.execute("INSERT INTO test_table (name) VALUES (%s) RETURNING id;", ("Coffee Bean",))
-        inserted_id = cur.fetchone()[0]
+        inserted_id = cur.fetchone()[0] # type: ignore
         conn.commit()
         print(f"Inserted row with ID: {inserted_id}")
 
