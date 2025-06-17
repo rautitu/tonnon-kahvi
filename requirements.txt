@@ -1,5 +1,4 @@
 requests
 cloudscraper
-json
 os
 psycopg2
