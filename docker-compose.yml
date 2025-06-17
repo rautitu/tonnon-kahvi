@@ -1,0 +1,26 @@
+version: '3.8'
+services:
+  fetcher:
+    build: .
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_USER: coffee
+      DB_PASSWORD: coffee123
+      DB_NAME: coffee_prices
+
+  db:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: coffee
+      POSTGRES_PASSWORD: coffee123
+      POSTGRES_DB: coffee_prices
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+volumes:
+  db_data:

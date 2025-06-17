@@ -1,7 +1,7 @@
 import json
 import requests
 import cloudscraper
-from base_fetcher import BaseProductFetcher
+from fetcher.base_fetcher import BaseProductFetcher
 
 class KRuokaFetcher(BaseProductFetcher):
     category: str = 'suodatinkahvi'

@@ -1,0 +1,19 @@
+from fetcher.fetchers.kesko_fetcher import KRuokaFetcher
+
+def fetch_all_prices():
+    fetchers = [KRuokaFetcher()]
+    all_prices = []
+    for fetcher in fetchers:
+        try:
+            data = fetcher.fetch_prices()
+            all_prices.extend(data)
+        except Exception as e:
+            print(f"Error in {type(fetcher).__name__}: {e}")
+    return all_prices
+
+if __name__ == "__main__":
+    #NOTE hakee hinnat
+    prices = fetch_all_prices()
+    print(prices)
+
+    print("fetcher execution ends")
