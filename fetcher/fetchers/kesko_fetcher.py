@@ -83,8 +83,7 @@ class KRuokaFetcher(BaseProductFetcher):
 
         if response.status_code == 200:
             print("Successfully queried K-Ruoka API")
-            parsed_response = self._extract_product_data(response.json())
-            print(f"TEMP type of parsed_response: {type(parsed_response)}")
+            parsed_response: list = self._extract_product_data(response.json())
             return parsed_response
         else:
             print("Request failed. Response:")
