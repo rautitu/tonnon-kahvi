@@ -1,4 +1,4 @@
-from fetchers.kesko_fetcher import KRuokaFetcher
+from fetcher.fetchers.kesko_fetcher import KRuokaFetcher
 
 def fetch_all_prices():
     fetchers = [KRuokaFetcher()]

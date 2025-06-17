@@ -6,4 +6,4 @@ COPY fetcher /app/fetcher
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-CMD ["python", "-u", "fetcher/main.py"]
+CMD ["python", "-u", "fetcher_main.py"]
