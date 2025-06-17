@@ -30,8 +30,13 @@ def main():
         password=os.environ['DB_PASSWORD']
     )
     cur = conn.cursor()
+    print(f"TEMP, cur type: {type(cur)}")
 
     try:
+        # Step 1.5: drop table if exists
+        cur.execute("DROP TABLE IF EXISTS test_table;")
+        conn.commit()
+        print("Previous table dropped.")
         # Step 2: Create table
         cur.execute("CREATE TABLE IF NOT EXISTS test_table (id SERIAL PRIMARY KEY, name TEXT);")
         conn.commit()
@@ -51,9 +56,9 @@ def main():
 
     finally:
         # Step 5: Drop table
-        cur.execute("DROP TABLE IF EXISTS test_table;")
-        conn.commit()
-        print("Table dropped.")
+        #cur.execute("DROP TABLE IF EXISTS test_table;")
+        #conn.commit()
+        #print("Table dropped.")
 
         cur.close()
         conn.close()
