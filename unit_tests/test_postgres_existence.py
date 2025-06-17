@@ -1,4 +1,5 @@
 import os
+import time
 import psycopg2
 
 def wait_for_postgres(max_retries=10, delay=2):
