@@ -1,6 +1,10 @@
 import json
 import requests
 import cloudscraper
+
+import psycopg2
+from psycopg2.extras import execute_values
+
 from fetcher.base_fetcher import BaseProductFetcher
 
 class KRuokaFetcher(BaseProductFetcher):
@@ -54,7 +58,7 @@ class KRuokaFetcher(BaseProductFetcher):
         
         return extracted_data
 
-    def fetch_prices(self):
+    def _fetch_prices(self):
         url = "https://www.k-ruoka.fi/kr-api/v2/product-search/suodatinkahvi?storeId=N106&offset=0&limit=100"
 
         #headers discovered with inspecting Network traffic and converting to cURL request
@@ -79,12 +83,47 @@ class KRuokaFetcher(BaseProductFetcher):
 
         if response.status_code == 200:
             print("Successfully queried K-Ruoka API")
-            parsed_response = self._extract_product_data(response.json())
-            print(f"TEMP type of parsed_response: {type(parsed_response)}")
+            parsed_response: list = self._extract_product_data(response.json())
             return parsed_response
         else:
             print("Request failed. Response:")
             print(response.text)
             raise RuntimeError(f"Failed to fetch data from K-Ruoka API, API response code: {response.status_code}")
 
-        
+    def _insert_prices(self, conn, product_data: list[dict]) -> str:
+        "Insert product data into products_and_prices table"
+        if not product_data:
+            return "No products to insert."
+
+        insert_query = """
+            INSERT INTO products_and_prices (
+                id, name_finnish, name_english, available_store, available_web,
+                net_weight, content_unit, image_url, brand_name,
+                normal_price_unit, normal_price, batch_price,
+                batch_discount_pct, batch_discount_type, batch_days_left
+            ) VALUES %s
+            ON CONFLICT (id) DO NOTHING
+        """
+
+        records: list[tuple] = [
+            (
+                item['id'], item['name_finnish'], item['name_english'],
+                item['available_store'], item['available_web'],
+                item['net_weight'], item['content_unit'], item['image_url'],
+                item['brand_name'], item['normal_price_unit'], item['normal_price'],
+                item['batch_price'], item['batch_discount_pct'],
+                item['batch_discount_type'], item['batch_days_left']
+            )
+            for item in product_data
+        ]
+
+        with conn.cursor() as cur:
+            execute_values(cur, insert_query, records)
+        conn.commit()
+
+        return f"Attempted to insert {len(records)} products (duplicates skipped)."
+
+
+    def fetch_and_insert(self):
+        """Performs both fetch + insert operations, returns some description string of the operation end result from insert"""
+        return self._insert_prices(self._conn, self._fetch_prices())
