@@ -12,5 +12,8 @@ def fetch_all_prices():
     return all_prices
 
 if __name__ == "__main__":
+    #NOTE hakee hinnat
     prices = fetch_all_prices()
     print(prices)
+
+    print("fetcher execution ends")
