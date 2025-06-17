@@ -1,7 +1,26 @@
 import os
 import psycopg2
 
+def wait_for_postgres(max_retries=10, delay=2):
+    for i in range(max_retries):
+        try:
+            conn = psycopg2.connect(
+                host="db",
+                dbname="coffee_prices",
+                user="coffee",
+                password="coffee123"
+            )
+            conn.close()
+            print("✅ Connected to PostgreSQL!")
+            return
+        except psycopg2.OperationalError as e:
+            print(f"❌ Attempt {i + 1}: PostgreSQL not ready yet... Retrying in {delay}s")
+            time.sleep(delay)
+    raise Exception("❌ PostgreSQL connection failed after retries.")
+
 def main():
+    #step 0: see and wait for postgres to respond
+    wait_for_postgres()
     # Step 1: Connect
     conn = psycopg2.connect(
         host=os.environ['DB_HOST'],

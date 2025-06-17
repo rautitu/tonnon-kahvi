@@ -1,5 +1,5 @@
 from fetcher.fetchers.kesko_fetcher import KRuokaFetcher
-from unit_tests import test_postgres_existence
+from unit_tests import test_postgres_existence #pylint import error can be ignored
 
 def fetch_all_prices():
     fetchers = [KRuokaFetcher()]
