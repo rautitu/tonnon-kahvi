@@ -5,9 +5,8 @@ import psycopg2
 from fetcher.fetchers.kesko_fetcher import KRuokaFetcher
 from unit_tests import test_postgres_existence
 
-fetchers: list = [KRuokaFetcher()]
-
 def wait_for_postgres(max_retries=10, delay=2):
+    """Helper method that verifies that the postgres db is up and running before executing anything else"""
     for i in range(max_retries):
         try:
             conn = psycopg2.connect(
@@ -24,11 +23,12 @@ def wait_for_postgres(max_retries=10, delay=2):
             time.sleep(delay)
     raise Exception("❌ PostgreSQL connection failed after retries.")
 
+#check if postgress is up and running
+wait_for_postgres(max_retries=10, delay=2)
+fetchers: list = [KRuokaFetcher()]
+
 def orchestrate_init_price_fetch_and_insert(fetchers_to_run: list):
     """Runs fetch_and_insert of every fetcher we have (defined in the list)"""
-    #check if postgress is up and running
-    wait_for_postgres(max_retries=10, delay=2)
-    
     all_results: list[str] = []
     for fetcher in fetchers_to_run:
         try:
@@ -39,9 +39,6 @@ def orchestrate_init_price_fetch_and_insert(fetchers_to_run: list):
 
 def orchestrate_daily_db_update(fetchers_to_run: list):
     """Runs update for the db main table(s)"""
-    #check if postgress is up and running
-    wait_for_postgres(max_retries=10, delay=2)
-    
     all_results: list[str] = []
     for fetcher in fetchers_to_run:
         try:
