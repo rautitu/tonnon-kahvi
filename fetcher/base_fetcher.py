@@ -38,7 +38,7 @@ class BaseProductFetcher(ABC):
         pass
 
     @abstractmethod
-    def _insert_prices(self, conn, product_data: List[Dict]):
+    def _insert_init_prices(self, conn, product_data: List[Dict]):
         "Insert product data into products_and_prices table"
         pass
 

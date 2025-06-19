@@ -1,5 +1,6 @@
 import json
 import requests
+import datetime
 import cloudscraper
 
 import psycopg2
@@ -90,8 +91,8 @@ class KRuokaFetcher(BaseProductFetcher):
             print(response.text)
             raise RuntimeError(f"Failed to fetch data from K-Ruoka API, API response code: {response.status_code}")
 
-    def _insert_prices(self, conn, product_data: list[dict]) -> str:
-        "Insert product data into products_and_prices table"
+    def _insert_init_prices(self, conn, product_data: list[dict]) -> str:
+        "Initial insert product data into products_and_prices table"
         if not product_data:
             return "No products to insert."
 
@@ -100,7 +101,8 @@ class KRuokaFetcher(BaseProductFetcher):
                 id, name_finnish, name_english, available_store, available_web,
                 net_weight, content_unit, image_url, brand_name,
                 normal_price_unit, normal_price, batch_price,
-                batch_discount_pct, batch_discount_type, batch_days_left
+                batch_discount_pct, batch_discount_type, batch_days_left,
+                tonno_data_source, tonno_load_ts, tonno_end_ts
             ) VALUES %s
             ON CONFLICT (id) DO NOTHING
         """
@@ -112,7 +114,10 @@ class KRuokaFetcher(BaseProductFetcher):
                 item['net_weight'], item['content_unit'], item['image_url'],
                 item['brand_name'], item['normal_price_unit'], item['normal_price'],
                 item['batch_price'], item['batch_discount_pct'],
-                item['batch_discount_type'], item['batch_days_left']
+                item['batch_discount_type'], item['batch_days_left'],
+                "K-ruoka",  # tonno_data_source (constant value)
+                datetime.datetime.now(),  # tonno_load_ts (current time)
+                None  # tonno_end_ts (NULL)
             )
             for item in product_data
         ]
@@ -126,4 +131,4 @@ class KRuokaFetcher(BaseProductFetcher):
 
     def fetch_and_insert(self):
         """Performs both fetch + insert operations, returns some description string of the operation end result from insert"""
-        return self._insert_prices(self._conn, self._fetch_prices())
+        return self._insert_init_prices(self._conn, self._fetch_prices())

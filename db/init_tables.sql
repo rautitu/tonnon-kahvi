@@ -13,5 +13,8 @@ CREATE TABLE products_and_prices (
     batch_price NUMERIC,
     batch_discount_pct NUMERIC,
     batch_discount_type TEXT,
-    batch_days_left INTEGER
+    batch_days_left INTEGER,
+    tonno_data_source TEXT,
+    tonno_load_ts TIMESTAMP,
+    tonno_end_ts TIMESTAMP
 );
