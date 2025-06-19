@@ -23,10 +23,6 @@ def wait_for_postgres(max_retries=10, delay=2):
             time.sleep(delay)
     raise Exception("❌ PostgreSQL connection failed after retries.")
 
-#check if postgress is up and running
-wait_for_postgres(max_retries=10, delay=2)
-fetchers: list = [KRuokaFetcher()]
-
 def orchestrate_init_price_fetch_and_insert(fetchers_to_run: list):
     """Runs fetch_and_insert of every fetcher we have (defined in the list)"""
     all_results: list[str] = []
@@ -48,12 +44,15 @@ def orchestrate_daily_db_update(fetchers_to_run: list):
     return all_results
 
 if __name__ == "__main__":
+    #check if postgress is up and running
+    wait_for_postgres(max_retries=10, delay=2)
+    fetchers: list = [KRuokaFetcher()]
     #next row is an init that is to be run only if db is fresh and not initiated
-    fetcher_init_run_results: list[str] = orchestrate_init_price_fetch_and_insert()
+    fetcher_init_run_results: list[str] = orchestrate_init_price_fetch_and_insert(fetchers)
     print(fetcher_init_run_results)
 
     #next row runs an update to already initiated db
-    #fetcher_update_run_results: list[str] = orchestrate_daily_db_update()
+    #fetcher_update_run_results: list[str] = orchestrate_daily_db_update(fetchers)
     #print(fetcher_update_run_results)
 
     print("fetcher execution ends")
