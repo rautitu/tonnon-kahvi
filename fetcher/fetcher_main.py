@@ -52,11 +52,11 @@ def orchestrate_daily_db_update(fetchers_to_run: list):
 
 if __name__ == "__main__":
     #next row is an init that is to be run only if db is fresh and not initiated
-    #fetcher_init_run_results: list[str] = orchestrate_init_price_fetch_and_insert()
-    #print(fetcher_init_run_results)
+    fetcher_init_run_results: list[str] = orchestrate_init_price_fetch_and_insert()
+    print(fetcher_init_run_results)
 
     #next row runs an update to already initiated db
-    fetcher_update_run_results: list[str] = orchestrate_daily_db_update()
-    print(fetcher_update_run_results)
+    #fetcher_update_run_results: list[str] = orchestrate_daily_db_update()
+    #print(fetcher_update_run_results)
 
     print("fetcher execution ends")
