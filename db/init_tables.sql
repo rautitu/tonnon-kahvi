@@ -1,5 +1,5 @@
 CREATE TABLE products_and_prices (
-    id TEXT PRIMARY KEY,
+    id TEXT, 
     name_finnish TEXT,
     name_english TEXT,
     available_store BOOLEAN,
@@ -15,6 +15,8 @@ CREATE TABLE products_and_prices (
     batch_discount_type TEXT,
     batch_days_left INTEGER,
     tonno_data_source TEXT,
-    tonno_load_ts TIMESTAMP,
-    tonno_end_ts TIMESTAMP
+    tonno_load_ts TIMESTAMP, 
+    tonno_end_ts TIMESTAMP,
+
+    PRIMARY KEY (id, tonno_load_ts)
 );
