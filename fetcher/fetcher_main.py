@@ -53,8 +53,4 @@ if __name__ == "__main__":
     fetcher_init_run_results: list[str] = orchestrate_init_or_update(fetchers)
     print(fetcher_init_run_results)
 
-    #next row runs an update to already initiated db
-    #fetcher_update_run_results: list[str] = orchestrate_daily_db_update(fetchers)
-    #print(f"Upsert results: {fetcher_update_run_results}")
-
     print("fetcher execution ends")
