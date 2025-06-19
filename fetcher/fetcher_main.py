@@ -48,11 +48,11 @@ if __name__ == "__main__":
     wait_for_postgres(max_retries=10, delay=2)
     fetchers: list = [KRuokaFetcher()]
     #next row is an init that is to be run only if db is fresh and not initiated
-    fetcher_init_run_results: list[str] = orchestrate_init_price_fetch_and_insert(fetchers)
-    print(f"Init insert results: {fetcher_init_run_results}")
+    #fetcher_init_run_results: list[str] = orchestrate_init_price_fetch_and_insert(fetchers)
+    #print(f"Init insert results: {fetcher_init_run_results}")
 
     #next row runs an update to already initiated db
-    #fetcher_update_run_results: list[str] = orchestrate_daily_db_update(fetchers)
-    #print(f"Upsert results: {fetcher_update_run_results}")
+    fetcher_update_run_results: list[str] = orchestrate_daily_db_update(fetchers)
+    print(f"Upsert results: {fetcher_update_run_results}")
 
     print("fetcher execution ends")
