@@ -6,6 +6,7 @@ from fetcher.fetchers.kesko_fetcher import KRuokaFetcher
 from unit_tests import test_postgres_existence
 
 def wait_for_postgres(max_retries=10, delay=2):
+    """Helper method that verifies that the postgres db is up and running before executing anything else"""
     for i in range(max_retries):
         try:
             conn = psycopg2.connect(
@@ -22,26 +23,34 @@ def wait_for_postgres(max_retries=10, delay=2):
             time.sleep(delay)
     raise Exception("❌ PostgreSQL connection failed after retries.")
 
-def orchestrate_price_fetch_and_insert():
+def orchestrate_init_or_update(fetchers_to_run: list):
     """Runs fetch_and_insert of every fetcher we have (defined in the list)"""
-    #check if postgress is up and running
-    wait_for_postgres(max_retries=10, delay=2)
-    
-    fetchers: list = [KRuokaFetcher()]
     all_results: list[str] = []
-    for fetcher in fetchers:
-        try:
-            all_results.append(fetcher.fetch_and_insert())
-        except Exception as e:
-            print(f"Error in {type(fetcher).__name__}: {e}")
+    for fetcher in fetchers_to_run:
+        if fetcher.target_tbl_has_existing_data():
+            #rows exist already in target for the certain fetcher -> upsert process
+            try:
+                result = fetcher.run_update()
+            except Exception as e:
+                print(f"Error in update process in {type(fetcher).__name__}: {e}")
+            all_results.append(result)
+            print(f"Update operation: {result}")
+        else:
+            #rows dont exist in target for the certain fetcher -> init process
+            try:
+                result = fetcher.init_fetch_and_insert()
+            except Exception as e:
+                print(f"Error in init process in {type(fetcher).__name__}: {e}")
+            all_results.append(result)
+            print(f"Initial insert operation: {result}")
     return all_results
 
 if __name__ == "__main__":
-    fetcher_run_results: list[str] = orchestrate_price_fetch_and_insert()
-    print(fetcher_run_results)
-
-
-    #test_postgres_existence.main()
-
+    #check if postgress is up and running
+    wait_for_postgres(max_retries=10, delay=2)
+    fetchers: list = [KRuokaFetcher()]
+    #next row is an init that is to be run only if db is fresh and not initiated
+    fetcher_init_run_results: list[str] = orchestrate_init_or_update(fetchers)
+    print(fetcher_init_run_results)
 
     print("fetcher execution ends")

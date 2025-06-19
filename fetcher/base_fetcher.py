@@ -9,6 +9,8 @@ class BaseProductFetcher(ABC):
     VALID_CATEGORIES: list[str] = ['suodatinkahvi']
 
     category: str
+    _data_source: str
+    
     def __init_subclass__(cls, **kwargs):
         """Validates that subclasses set a valid category"""
         super().__init_subclass__(**kwargs)
@@ -32,17 +34,33 @@ class BaseProductFetcher(ABC):
             self._conn.close()
 
     #abstract class method definitions begin
+    #@abstractmethod
+    #def _fetch_prices(self) -> List[Dict]:
+    #    """Fetch and return coffee price data as list of dicts."""
+    #    pass
+#
+    #@abstractmethod
+    #def _insert_init_prices(self, conn, product_data: List[Dict]):
+    #    "Insert product data into products_and_prices table"
+    #    pass
+
     @abstractmethod
-    def _fetch_prices(self) -> List[Dict]:
-        """Fetch and return coffee price data as list of dicts."""
+    def target_tbl_has_existing_data(self):
+        """
+        Checks if there are existing rows in the products_and_prices table 
+        for the selected data source.
+        
+        Returns:
+            bool: True if there are existing K-ruoka rows (>0), False if no rows (0)
+        """
         pass
 
     @abstractmethod
-    def _insert_prices(self, conn, product_data: List[Dict]):
-        "Insert product data into products_and_prices table"
-        pass
-
-    @abstractmethod
-    def fetch_and_insert(self):
+    def init_fetch_and_insert(self):
         """Performs both fetch + insert operations, returns some description string of the operation end result from insert"""
+        pass
+
+    @abstractmethod
+    def run_update(self):
+        """Performs a scheduled fetch and update of prices."""
         pass
