@@ -26,7 +26,7 @@ class KRuokaFetcher(BaseProductFetcher):
         check_query = f"""
             SELECT COUNT(*) 
             FROM products_and_prices 
-            WHERE tonno_data_source = {self._data_source}
+            WHERE tonno_data_source = '{self._data_source}'
         """
         
         with self._conn.cursor() as cur:
