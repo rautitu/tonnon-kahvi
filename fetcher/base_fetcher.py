@@ -9,6 +9,8 @@ class BaseProductFetcher(ABC):
     VALID_CATEGORIES: list[str] = ['suodatinkahvi']
 
     category: str
+    _data_source: str
+    
     def __init_subclass__(cls, **kwargs):
         """Validates that subclasses set a valid category"""
         super().__init_subclass__(**kwargs)

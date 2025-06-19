@@ -10,10 +10,7 @@ from fetcher.base_fetcher import BaseProductFetcher
 
 class KRuokaFetcher(BaseProductFetcher):
     category: str = 'suodatinkahvi'
-
-    def __init__(self):
-        super().__init__()  # This calls BaseProductFetcher.__init__()
-        self._data_source: str = 'K-ruoka' 
+    _data_source: str = 'K-ruoka'
 
     def target_tbl_has_existing_data(self) -> bool:
         """
