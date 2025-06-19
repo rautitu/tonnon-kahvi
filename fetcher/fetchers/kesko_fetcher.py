@@ -11,6 +11,29 @@ from fetcher.base_fetcher import BaseProductFetcher
 class KRuokaFetcher(BaseProductFetcher):
     category: str = 'suodatinkahvi'
 
+    def __init__(self):
+        self._data_source: str = 'K-ruoka' 
+
+    def target_tbl_has_existing_data(self) -> bool:
+        """
+        Checks if there are existing rows in the products_and_prices table 
+        for the K-ruoka data source.
+        
+        Returns:
+            bool: True if there are existing K-ruoka rows (>0), False if no rows (0)
+        """
+        check_query = f"""
+            SELECT COUNT(*) 
+            FROM products_and_prices 
+            WHERE tonno_data_source = {self._data_source}
+        """
+        
+        with self._conn.cursor() as cur:
+            cur.execute(check_query)
+            count = cur.fetchone()[0]
+        
+        return count > 0
+
     def _extract_product_data(self, json_data: dict):
         extracted_data: list = []
     

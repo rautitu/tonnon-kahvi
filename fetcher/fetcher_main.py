@@ -23,24 +23,26 @@ def wait_for_postgres(max_retries=10, delay=2):
             time.sleep(delay)
     raise Exception("❌ PostgreSQL connection failed after retries.")
 
-def orchestrate_init_price_fetch_and_insert(fetchers_to_run: list):
+def orchestrate_init_or_update(fetchers_to_run: list):
     """Runs fetch_and_insert of every fetcher we have (defined in the list)"""
     all_results: list[str] = []
     for fetcher in fetchers_to_run:
-        try:
-            all_results.append(fetcher.init_fetch_and_insert())
-        except Exception as e:
-            print(f"Error in {type(fetcher).__name__}: {e}")
-    return all_results
-
-def orchestrate_daily_db_update(fetchers_to_run: list):
-    """Runs update for the db main table(s)"""
-    all_results: list[str] = []
-    for fetcher in fetchers_to_run:
-        try:
-            all_results.append(fetcher.run_update())
-        except Exception as e:
-            print(f"Error in {type(fetcher).__name__}: {e}")
+        if fetcher.target_tbl_has_existing_data():
+            #rows exist already in target for the certain fetcher -> upsert process
+            try:
+                result = fetcher.run_update()
+            except Exception as e:
+                print(f"Error in update process in {type(fetcher).__name__}: {e}")
+            all_results.append(result)
+            print(f"Update operation: {result}")
+        else:
+            #rows dont exist in target for the certain fetcher -> init process
+            try:
+                result = fetcher.init_fetch_and_insert()
+            except Exception as e:
+                print(f"Error in init process in {type(fetcher).__name__}: {e}")
+            all_results.append(result)
+            print(f"Initial insert operation: {result}")
     return all_results
 
 if __name__ == "__main__":
@@ -48,8 +50,8 @@ if __name__ == "__main__":
     wait_for_postgres(max_retries=10, delay=2)
     fetchers: list = [KRuokaFetcher()]
     #next row is an init that is to be run only if db is fresh and not initiated
-    fetcher_init_run_results: list[str] = orchestrate_init_price_fetch_and_insert(fetchers)
-    print(f"Init insert results: {fetcher_init_run_results}")
+    fetcher_init_run_results: list[str] = orchestrate_init_or_update(fetchers)
+    print(fetcher_init_run_results)
 
     #next row runs an update to already initiated db
     #fetcher_update_run_results: list[str] = orchestrate_daily_db_update(fetchers)

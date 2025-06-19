@@ -43,6 +43,17 @@ class BaseProductFetcher(ABC):
     #    pass
 
     @abstractmethod
+    def target_tbl_has_existing_data(self):
+        """
+        Checks if there are existing rows in the products_and_prices table 
+        for the selected data source.
+        
+        Returns:
+            bool: True if there are existing K-ruoka rows (>0), False if no rows (0)
+        """
+        pass
+
+    @abstractmethod
     def init_fetch_and_insert(self):
         """Performs both fetch + insert operations, returns some description string of the operation end result from insert"""
         pass
