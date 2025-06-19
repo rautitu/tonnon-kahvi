@@ -32,17 +32,22 @@ class BaseProductFetcher(ABC):
             self._conn.close()
 
     #abstract class method definitions begin
-    @abstractmethod
-    def _fetch_prices(self) -> List[Dict]:
-        """Fetch and return coffee price data as list of dicts."""
-        pass
-
-    @abstractmethod
-    def _insert_init_prices(self, conn, product_data: List[Dict]):
-        "Insert product data into products_and_prices table"
-        pass
+    #@abstractmethod
+    #def _fetch_prices(self) -> List[Dict]:
+    #    """Fetch and return coffee price data as list of dicts."""
+    #    pass
+#
+    #@abstractmethod
+    #def _insert_init_prices(self, conn, product_data: List[Dict]):
+    #    "Insert product data into products_and_prices table"
+    #    pass
 
     @abstractmethod
     def fetch_and_insert(self):
         """Performs both fetch + insert operations, returns some description string of the operation end result from insert"""
+        pass
+
+    @abstractmethod
+    def run_update(self):
+        """Performs a scheduled fetch and update of prices."""
         pass
