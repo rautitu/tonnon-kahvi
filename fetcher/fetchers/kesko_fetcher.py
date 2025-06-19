@@ -104,7 +104,7 @@ class KRuokaFetcher(BaseProductFetcher):
                 batch_discount_pct, batch_discount_type, batch_days_left,
                 tonno_data_source, tonno_load_ts, tonno_end_ts
             ) VALUES %s
-            ON CONFLICT (id) DO NOTHING
+            ON CONFLICT (id, tonno_load_ts) DO NOTHING
         """
 
         records: list[tuple] = [
