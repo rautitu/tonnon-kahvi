@@ -43,7 +43,7 @@ class BaseProductFetcher(ABC):
     #    pass
 
     @abstractmethod
-    def fetch_and_insert(self):
+    def init_fetch_and_insert(self):
         """Performs both fetch + insert operations, returns some description string of the operation end result from insert"""
         pass
 

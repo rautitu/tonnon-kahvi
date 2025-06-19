@@ -200,7 +200,7 @@ class KRuokaFetcher(BaseProductFetcher):
                 f"Updated (new version): {updated_count}, "
                 f"Disappeared: {disappeared_count}.")
     
-    def fetch_and_insert(self):
+    def init_fetch_and_insert(self):
         """Performs both fetch + insert operations, returns some description string of the operation end result from insert"""
         fetched_data: list[dict] = self._fetch_prices()
         return self._insert_init_prices(self._conn, fetched_data)
