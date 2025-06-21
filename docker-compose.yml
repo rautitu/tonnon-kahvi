@@ -1,9 +1,24 @@
-#version: '3.8'
 services:
   fetcher:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     depends_on:
       - db
+    environment:
+      DB_HOST: db
+      DB_USER: coffee
+      DB_PASSWORD: coffee123
+      DB_NAME: coffee_prices
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
     environment:
       DB_HOST: db
       DB_USER: coffee
