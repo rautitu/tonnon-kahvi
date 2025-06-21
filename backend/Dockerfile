@@ -6,7 +6,13 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-COPY ./backend /app
+
+# Copy only the backend code into the container
+COPY backend /app
+
+# Copy requirements.txt from the parent directory
+COPY requirements.txt /app/requirements.txt
+
 RUN pip install --no-cache-dir -r requirements.txt
 
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
