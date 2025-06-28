@@ -6,7 +6,7 @@ export default function App() {
   const [data, setData] = useState(null);
 
   useEffect(() => {
-    axios.get('http://localhost:8000/coffees')
+    axios.get('http://localhost:8000/')
       .then((res) => setData(res.data))
       .catch((err) => console.error(err));
   }, []);
