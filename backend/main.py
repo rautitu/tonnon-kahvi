@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from routers.get_coffee_prices import get_coffee_prices
+from routers.get_coffee_prices import router
 #from routers import get_coffee_prices
 
 app = FastAPI(title="Coffee API")
