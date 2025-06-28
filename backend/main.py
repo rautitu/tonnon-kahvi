@@ -4,7 +4,8 @@ from routers.get_coffee_prices import router
 
 app = FastAPI(title="Coffee API")
 
-app.include_router(get_coffee_prices.router)
+#app.include_router(get_coffee_prices.router)
+app.include_router(router)
 
 @app.get("/")
 def root():
