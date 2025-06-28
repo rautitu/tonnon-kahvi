@@ -21,6 +21,6 @@ def get_all_endpoints():
                 "methods": list(route.methods)
             })
     return {
-        "message": "TonnoCoffeeAPI available endpoints:",
+        "message": "TonnoCoffeeAPI endpoints:",
         "available_endpoints": routes
     }
