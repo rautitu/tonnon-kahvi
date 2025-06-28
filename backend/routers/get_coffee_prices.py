@@ -7,8 +7,8 @@ router = APIRouter()
 
 class CoffeeOut(BaseModel):
     name_finnish: str
-    normal_price: str
-    net_weight: str
+    normal_price: float
+    net_weight: float
 
 @router.get("/coffees", response_model=list[CoffeeOut])
 def get_coffee_prices(db=Depends(get_db)):
