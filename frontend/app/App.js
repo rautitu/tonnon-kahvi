@@ -3,12 +3,12 @@ import { View, Text, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-//pages
-import Home from './pages/Home';
-import Endpoints from './pages/Endpoints';
-import Coffees from './pages/Coffees';
+// pages
+import Home from './screens/Home';
+import Endpoints from './screens/Endpoints';
+import Coffees from './screens/Coffees';
 
-//creating navigator
+// creating navigator
 const Stack = createNativeStackNavigator();
 
 export default function App() {
