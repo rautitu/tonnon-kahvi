@@ -16,8 +16,14 @@ export default function App() {
 
 
   return (
-    <View>
-      <Text>Data from backend: {JSON.stringify(data)}</Text>
+    <View style={{ padding: 20 }}>
+      <Text>Message: {data?.message}</Text>
+      <Text>Available endpoints:</Text>
+      {data?.available_endpoints?.map((route, index) => (
+        <Text key={index}>
+          {route.methods.join(", ")} {route.path}
+        </Text>
+      ))}
     </View>
   );
 }
