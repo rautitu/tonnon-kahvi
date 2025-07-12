@@ -20,11 +20,13 @@ export default function App() {
     <Router>
       <View style={styles.container}>
         <Text>Available subpages:</Text>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/endpoints" element={<Endpoints />} />
-          <Route path="/coffees" element={<Coffees />} />
-        </Routes>
+{
+//        <Routes>
+//          <Route path="/" element={<Home />} />
+//          <Route path="/endpoints" element={<Endpoints />} />
+//          <Route path="/coffees" element={<Coffees />} />
+//        </Routes>
+}
       </View>
     </Router>
   );
