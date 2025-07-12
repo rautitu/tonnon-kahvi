@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native-web';
-import { Link } from 'react-router-dom';
+import { View, Text, StyleSheet, Button } from 'react-native';
 import axios from 'axios';
 
-export default function Home() {
+export default function Home({ navigation }) {
   const [message, setMessage] = useState("Loading...");
 
   useEffect(() => {
@@ -13,23 +12,22 @@ export default function Home() {
   }, []);
 
   return (
-    <View>
+    <View style={styles.container}>
       <Text style={styles.title}>{message}</Text>
-      <Link to="/endpoints" style={styles.link}>View available endpoints</Link>
-      <Link to="/coffees" style={styles.link}>View coffee prices</Link>
+      <Button title="View available endpoints" onPress={() => navigation.navigate('Endpoints')} />
+      <View style={{ marginTop: 10 }} />
+      <Button title="View coffee prices" onPress={() => navigation.navigate('Coffees')} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    padding: 24,
+  },
   title: {
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 20,
-  },
-  link: {
-    fontSize: 18,
-    color: 'blue',
-    marginVertical: 10,
   },
 });
