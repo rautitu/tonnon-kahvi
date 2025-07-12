@@ -17,6 +17,7 @@ export default function Home({ navigation }) {
       <Button title="View available endpoints" onPress={() => navigation.navigate('Endpoints')} />
       <View style={{ marginTop: 10 }} />
       <Button title="View coffee prices" onPress={() => navigation.navigate('Coffees')} />
+      <Button title="View coffee prices v2" onPress={() => navigation.navigate('Coffees_v2')} />
     </View>
   );
 }
