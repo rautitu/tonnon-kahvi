@@ -18,8 +18,8 @@ export default function App() {
       <Stack.Navigator initialRouteName="Home">
         <Stack.Screen name="Home" component={Home} />
         <Stack.Screen name="Endpoints" component={Endpoints} />
-        <Stack.Screen name="Coffees" component={Coffees} />
         <Stack.Screen name="Coffees_v2" component={Coffees_v2} />
+        <Stack.Screen name="Coffees" component={Coffees} />
       </Stack.Navigator>
     </NavigationContainer>
   );
