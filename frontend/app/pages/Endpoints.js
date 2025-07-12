@@ -1,6 +1,6 @@
 // pages/Endpoints.js
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native-web';
+import { View, Text, StyleSheet } from 'react-native';
 import axios from 'axios';
 
 export default function Endpoints() {
