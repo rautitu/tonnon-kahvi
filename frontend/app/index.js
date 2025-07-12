@@ -7,9 +7,13 @@ export default function App() {
 
   useEffect(() => {
     axios.get('http://localhost:8000/')
-      .then((res) => setData(res.data))
+      .then((res) => {
+        console.log('Backend response:', res.data);
+        setData(res.data);
+      })
       .catch((err) => console.error(err));
   }, []);
+
 
   return (
     <View>
