@@ -1,34 +1,25 @@
-//import { View, Text } from 'react-native';
-//
-//export default function App() {
-//  return (
-//    <View>
-//      <Text>Hello Web!</Text>
-//    </View>
-//  );
-//}
-
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import { View, Text, StyleSheet } from 'react-native-web'; 
+import { View, Text, StyleSheet } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+
+//pages
 import Home from './pages/Home';
 import Endpoints from './pages/Endpoints';
 import Coffees from './pages/Coffees';
 
+//creating navigator
+const Stack = createNativeStackNavigator();
+
 export default function App() {
   return (
-    <Router>
-      <View style={styles.container}>
-        <Text>Available subpages:</Text>
-{
-//        <Routes>
-//          <Route path="/" element={<Home />} />
-//          <Route path="/endpoints" element={<Endpoints />} />
-//          <Route path="/coffees" element={<Coffees />} />
-//        </Routes>
-}
-      </View>
-    </Router>
+    <NavigationContainer>
+      <Stack.Navigator initialRouteName="Home">
+        <Stack.Screen name="Home" component={Home} />
+        <Stack.Screen name="Endpoints" component={Endpoints} />
+        <Stack.Screen name="Coffees" component={Coffees} />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
 
