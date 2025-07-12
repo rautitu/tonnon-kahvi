@@ -1,4 +1,3 @@
-// pages/Home.js
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native-web';
 import { Link } from 'react-router-dom';
@@ -16,8 +15,8 @@ export default function Home() {
   return (
     <View>
       <Text style={styles.title}>{message}</Text>
-      <Link to="/endpoints" style={styles.link}>🔗 View available endpoints</Link>
-      <Link to="/coffees" style={styles.link}>☕ View coffee prices</Link>
+      <Link to="/endpoints" style={styles.link}>View available endpoints</Link>
+      <Link to="/coffees" style={styles.link}>View coffee prices</Link>
     </View>
   );
 }
