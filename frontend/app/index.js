@@ -8,7 +8,7 @@ export default function App() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    axios.get('http://localhost:8000/')
+    axios.get('http://localhost:8000/endpoints')
       .then((res) => {
         console.log('Backend response:', res.data);
         setData(res.data);

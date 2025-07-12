@@ -16,11 +16,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/hello")
-def root():
-    return {"message": "Hello, Coffee API!"}
-
 @app.get("/")
+def root():
+    return {"message": "Hello, welcome to tonnon-kahvi version 0.1!"}
+
+@app.get("/endpoints")
 def get_all_endpoints():
     routes = []
     for route in app.routes:
