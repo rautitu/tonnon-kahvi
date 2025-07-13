@@ -19,5 +19,5 @@ COPY frontend/ .
 EXPOSE 19000 19001 19002 19006
 
 # Start the server
-CMD ["npx", "expo", "start", "--host", "0.0.0.0", "--clear", "--no-interactive"]
+CMD ["npx", "expo", "start", "--host", "0.0.0.0", "--clear"]
 
