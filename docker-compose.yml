@@ -39,6 +39,8 @@ services:
       - /app/node_modules  # Prevent host node_modules from overwriting container's
     stdin_open: true
     tty: true
+    environment:
+      - WEB_HOST=0.0.0.0
 
   db:
     image: postgres:16
