@@ -25,6 +25,18 @@ services:
       DB_PASSWORD: coffee123
       DB_NAME: coffee_prices
 
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    ports:
+      - "19006:19006"  # Adjust to match your app's dev server port
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+    stdin_open: true
+    tty: true
+
   db:
     image: postgres:16
     restart: always
