@@ -1,157 +1,254 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import {
+  View,
+  Text,
+  FlatList,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+} from 'react-native';
 
-// Mock data based on your backend response structure.
-// In a real application, you would fetch this from your API.
-const mockCoffeeData = [
-  { name_finnish: 'Juhla Mokka', normal_price: 5.95, net_weight: 500, data_source: 'K-Ruoka' },
-  { name_finnish: 'Presidentti', normal_price: 6.45, net_weight: 500, data_source: 'S-Kaupat' },
-  { name_finnish: 'Kulta Katriina', normal_price: 4.99, net_weight: 450, data_source: 'K-Ruoka' },
-  { name_finnish: 'Löfbergs Lila', normal_price: 7.20, net_weight: 500, data_source: 'Foodie.fi' },
-  { name_finnish: 'Gevalia', normal_price: 6.80, net_weight: 450, data_source: 'S-Kaupat' },
-  { name_finnish: 'Arvid Nordquist Classic', normal_price: 8.10, net_weight: 500, data_source: 'K-Ruoka' },
-  { name_finnish: 'Paulig Brazil', normal_price: 7.50, net_weight: 500, data_source: 'Foodie.fi' },
-  { name_finnish: 'Jacobs Krönung', normal_price: 6.25, net_weight: 500, data_source: 'S-Kaupat' },
-];
+const CoffeeTable = () => {
+  const [coffeeData, setCoffeeData] = useState([]);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const [filters, setFilters] = useState({
+    name: '',
+    dataSource: '',
+    minPrice: '',
+    maxPrice: '',
+  });
 
-// Reusable hook for managing sorting logic
-const useSortableData = (items, config = null) => {
-  const [sortConfig, setSortConfig] = useState(config);
+  // Fetch data from your backend
+  useEffect(() => {
+    fetchCoffeeData();
+  }, []);
 
-  const sortedItems = useMemo(() => {
-    let sortableItems = [...items];
-    if (sortConfig !== null) {
-      sortableItems.sort((a, b) => {
+  const fetchCoffeeData = async () => {
+    try {
+      const response = await fetch('http://localhost:8000/coffees');
+      const data = await response.json();
+      setCoffeeData(data);
+    } catch (error) {
+      console.error('Error fetching coffee data:', error);
+    }
+  };
+
+  // Sorting logic
+  const sortedAndFilteredData = useMemo(() => {
+    let filtered = coffeeData.filter(item => {
+      const matchesName = item.name_finnish.toLowerCase().includes(filters.name.toLowerCase());
+      const matchesDataSource = item.data_source.toLowerCase().includes(filters.dataSource.toLowerCase());
+      const matchesMinPrice = filters.minPrice === '' || item.normal_price >= parseFloat(filters.minPrice);
+      const matchesMaxPrice = filters.maxPrice === '' || item.normal_price <= parseFloat(filters.maxPrice);
+      
+      return matchesName && matchesDataSource && matchesMinPrice && matchesMaxPrice;
+    });
+
+    if (sortConfig.key) {
+      filtered.sort((a, b) => {
         if (a[sortConfig.key] < b[sortConfig.key]) {
-          return sortConfig.direction === 'ascending' ? -1 : 1;
+          return sortConfig.direction === 'asc' ? -1 : 1;
         }
         if (a[sortConfig.key] > b[sortConfig.key]) {
-          return sortConfig.direction === 'ascending' ? 1 : -1;
+          return sortConfig.direction === 'asc' ? 1 : -1;
         }
         return 0;
       });
     }
-    return sortableItems;
-  }, [items, sortConfig]);
 
-  const requestSort = (key) => {
-    let direction = 'ascending';
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'ascending') {
-      direction = 'descending';
+    return filtered;
+  }, [coffeeData, sortConfig, filters]);
+
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
     }
     setSortConfig({ key, direction });
   };
 
-  return { items: sortedItems, requestSort, sortConfig };
-};
-
-
-// Main App Component
-export default function App() {
-  const [coffees, setCoffees] = useState(mockCoffeeData);
-  const [filterText, setFilterText] = useState('');
-  
-  // In a real app, you would fetch data here, e.g., inside a useEffect hook
-   useEffect(() => {
-     fetch('/http://localhost:8000/coffees')
-       .then(response => response.json())
-       .then(data => setCoffees(data));
-   }, []);
-
-  const { items: sortedCoffees, requestSort, sortConfig } = useSortableData(coffees);
-
-  const getSortDirectionSymbol = (name) => {
-    if (!sortConfig || sortConfig.key !== name) {
-      return ' ↕';
+  const getSortIcon = (columnKey) => {
+    if (sortConfig.key === columnKey) {
+      return sortConfig.direction === 'asc' ? '↑' : '↓';
     }
-    return sortConfig.direction === 'ascending' ? ' ↑' : ' ↓';
+    return '↕';
   };
 
-  const filteredCoffees = useMemo(() => {
-    if (!filterText) {
-      return sortedCoffees;
-    }
-    return sortedCoffees.filter(coffee =>
-      coffee.data_source.toLowerCase().includes(filterText.toLowerCase())
-    );
-  }, [sortedCoffees, filterText]);
+  const TableHeader = () => (
+    <View style={styles.headerRow}>
+      <TouchableOpacity 
+        style={styles.headerCell} 
+        onPress={() => handleSort('name_finnish')}
+      >
+        <Text style={styles.headerText}>Name {getSortIcon('name_finnish')}</Text>
+      </TouchableOpacity>
+      <TouchableOpacity 
+        style={styles.headerCell} 
+        onPress={() => handleSort('normal_price')}
+      >
+        <Text style={styles.headerText}>Price {getSortIcon('normal_price')}</Text>
+      </TouchableOpacity>
+      <TouchableOpacity 
+        style={styles.headerCell} 
+        onPress={() => handleSort('net_weight')}
+      >
+        <Text style={styles.headerText}>Weight {getSortIcon('net_weight')}</Text>
+      </TouchableOpacity>
+      <TouchableOpacity 
+        style={styles.headerCell} 
+        onPress={() => handleSort('data_source')}
+      >
+        <Text style={styles.headerText}>Source {getSortIcon('data_source')}</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  const renderRow = ({ item }) => (
+    <View style={styles.row}>
+      <View style={styles.cell}>
+        <Text style={styles.cellText}>{item.name_finnish}</Text>
+      </View>
+      <View style={styles.cell}>
+        <Text style={styles.cellText}>€{item.normal_price.toFixed(2)}</Text>
+      </View>
+      <View style={styles.cell}>
+        <Text style={styles.cellText}>{item.net_weight}g</Text>
+      </View>
+      <View style={styles.cell}>
+        <Text style={styles.cellText}>{item.data_source}</Text>
+      </View>
+    </View>
+  );
 
   return (
-    <div className="bg-gray-900 min-h-screen p-4 sm:p-6 lg:p-8 font-sans text-white">
-      <div className="max-w-4xl mx-auto">
-        <header className="mb-8">
-          <h1 className="text-3xl font-bold text-center text-amber-400">Coffee Prices</h1>
-          <p className="text-center text-gray-400 mt-2">View, sort, and filter coffee products.</p>
-        </header>
-
-        <div className="mb-6">
-          <input
-            type="text"
-            placeholder="Filter by data source (e.g., K-Ruoka)..."
-            value={filterText}
-            onChange={(e) => setFilterText(e.target.value)}
-            className="w-full p-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-white"
+    <View style={styles.container}>
+      {/* Filters */}
+      <View style={styles.filtersContainer}>
+        <Text style={styles.filtersTitle}>Filters</Text>
+        <TextInput
+          style={styles.filterInput}
+          placeholder="Filter by name..."
+          value={filters.name}
+          onChangeText={(text) => setFilters({...filters, name: text})}
+        />
+        <TextInput
+          style={styles.filterInput}
+          placeholder="Filter by data source..."
+          value={filters.dataSource}
+          onChangeText={(text) => setFilters({...filters, dataSource: text})}
+        />
+        <View style={styles.priceFilters}>
+          <TextInput
+            style={[styles.filterInput, styles.priceInput]}
+            placeholder="Min price"
+            value={filters.minPrice}
+            onChangeText={(text) => setFilters({...filters, minPrice: text})}
+            keyboardType="numeric"
           />
-        </div>
+          <TextInput
+            style={[styles.filterInput, styles.priceInput]}
+            placeholder="Max price"
+            value={filters.maxPrice}
+            onChangeText={(text) => setFilters({...filters, maxPrice: text})}
+            keyboardType="numeric"
+          />
+        </View>
+      </View>
 
-        <div className="overflow-x-auto bg-gray-800 rounded-lg shadow-lg">
-          <table className="min-w-full divide-y divide-gray-700">
-            <thead className="bg-gray-700/50">
-              <tr>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer"
-                  onClick={() => requestSort('name_finnish')}
-                >
-                  Product Name
-                  <span className="ml-1">{getSortDirectionSymbol('name_finnish')}</span>
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer"
-                  onClick={() => requestSort('normal_price')}
-                >
-                  Price (€)
-                  <span className="ml-1">{getSortDirectionSymbol('normal_price')}</span>
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer"
-                  onClick={() => requestSort('net_weight')}
-                >
-                  Net Weight (g)
-                   <span className="ml-1">{getSortDirectionSymbol('net_weight')}</span>
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer"
-                  onClick={() => requestSort('data_source')}
-                >
-                  Data Source
-                  <span className="ml-1">{getSortDirectionSymbol('data_source')}</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-gray-800 divide-y divide-gray-700">
-              {filteredCoffees.length > 0 ? (
-                filteredCoffees.map((coffee, index) => (
-                  <tr key={index} className="hover:bg-gray-700/50 transition-colors duration-200">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">{coffee.name_finnish}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{coffee.normal_price.toFixed(2)}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{coffee.net_weight}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{coffee.data_source}</td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="4" className="text-center py-8 text-gray-500">
-                    No products found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+      {/* Table */}
+      <View style={styles.tableContainer}>
+        <TableHeader />
+        <FlatList
+          data={sortedAndFilteredData}
+          renderItem={renderRow}
+          keyExtractor={(item, index) => index.toString()}
+          style={styles.table}
+        />
+      </View>
+    </View>
   );
-}
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: '#f5f5f5',
+  },
+  filtersContainer: {
+    backgroundColor: 'white',
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  filtersTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 12,
+  },
+  filterInput: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 4,
+    padding: 8,
+    marginBottom: 8,
+    backgroundColor: 'white',
+  },
+  priceFilters: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  priceInput: {
+    flex: 0.48,
+  },
+  tableContainer: {
+    flex: 1,
+    backgroundColor: 'white',
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    backgroundColor: '#f0f0f0',
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+  },
+  headerCell: {
+    flex: 1,
+    padding: 12,
+    justifyContent: 'center',
+  },
+  headerText: {
+    fontWeight: 'bold',
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  table: {
+    flex: 1,
+  },
+  row: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  cell: {
+    flex: 1,
+    padding: 12,
+    justifyContent: 'center',
+  },
+  cellText: {
+    fontSize: 14,
+    textAlign: 'center',
+  },
+});
+
+export default CoffeeTable;
