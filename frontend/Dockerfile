@@ -13,8 +13,8 @@ RUN npm install
 # Copy the rest of the frontend code into the container
 COPY frontend/ .
 
-# Expose the default port (adjust if needed)
-EXPOSE 19006
+# Expose ports used by Expo (web + mobile access)
+EXPOSE 19000 19001 19002 19006
 
 # Start the server
-CMD ["npm", "start"]
+CMD ["npx", "expo", "start", "--tunnel"]
