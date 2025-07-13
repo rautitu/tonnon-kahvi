@@ -4,7 +4,7 @@ FROM node:18
 # Set working directory inside container
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y watchman
+#RUN apt-get update && apt-get install -y watchman
 
 # Copy package files from the *subfolder*, not root
 COPY frontend/package*.json ./
@@ -19,5 +19,5 @@ COPY frontend/ .
 EXPOSE 19000 19001 19002 19006
 
 # Start the server
-CMD ["npx", "expo", "start", "--tunnel", "--clear", "--no-interactive"]
+CMD ["npx", "expo", "start", "--web", "--host", "0.0.0.0", "--port", "19006"]
 
