@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 
 // Mock data based on your backend response structure.
 // In a real application, you would fetch this from your API.
@@ -51,11 +51,11 @@ export default function App() {
   const [filterText, setFilterText] = useState('');
   
   // In a real app, you would fetch data here, e.g., inside a useEffect hook
-  // useEffect(() => {
-  //   fetch('/coffees')
-  //     .then(response => response.json())
-  //     .then(data => setCoffees(data));
-  // }, []);
+   useEffect(() => {
+     fetch('/http://localhost:8000/coffees')
+       .then(response => response.json())
+       .then(data => setCoffees(data));
+   }, []);
 
   const { items: sortedCoffees, requestSort, sortConfig } = useSortableData(coffees);
 
