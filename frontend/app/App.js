@@ -6,8 +6,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 // screens
 import Home from './screens/Home';
 import Endpoints from './screens/Endpoints';
-import Coffees from './screens/Coffees';
-import Coffees_v2 from './screens/Coffees_v2';
+//import Coffees from './screens/Coffees';
+//import Coffees_v2 from './screens/Coffees_v2';
 
 // creating navigator
 const Stack = createNativeStackNavigator();
