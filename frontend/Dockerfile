@@ -21,5 +21,5 @@ EXPOSE 19000 19001 19002 19006
 # Start the server
 #CMD ["npm", "start"]
 #CMD ["npx", "expo", "start", "--clear"]
-CMD ["npx", "expo", "start", "--web"]
+CMD ["npx", "expo", "start", "--web", "--host", "localhost"]
 
