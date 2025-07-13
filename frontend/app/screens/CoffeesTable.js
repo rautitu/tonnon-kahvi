@@ -25,7 +25,7 @@ const CoffeeTable = () => {
 
   const fetchCoffeeData = async () => {
     try {
-      const response = await fetch('http://localhost:8000/coffees');
+      const response = await fetch('http://backend:8000/coffees');
       const data = await response.json();
       setCoffeeData(data);
     } catch (error) {
