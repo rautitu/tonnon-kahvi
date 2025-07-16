@@ -10,7 +10,8 @@ app.include_router(router)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:19006"],  # Expo Web on host
+    #allow_origins=["http://localhost:19006"],  # Expo Web on host
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
