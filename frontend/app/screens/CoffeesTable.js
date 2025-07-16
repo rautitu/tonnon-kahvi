@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
+import { API_URL } from '../config';
 
 const CoffeeTable = () => {
   const [coffeeData, setCoffeeData] = useState([]);
@@ -25,7 +26,7 @@ const CoffeeTable = () => {
 
   const fetchCoffeeData = async () => {
     try {
-      const response = await fetch('http://localhost:8000/coffees');
+      const response = await fetch(`${API_URL}/coffees`);
       const data = await response.json();
       setCoffeeData(data);
     } catch (error) {

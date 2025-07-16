@@ -25,6 +25,23 @@ services:
       DB_PASSWORD: coffee123
       DB_NAME: coffee_prices
 
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    ports:
+      - "19000:19000"  # Expo dev tools
+      - "19001:19001"  # Packager
+      - "19002:19002"  # Expo dev server
+      - "19006:19006"  # Web interface
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules  # Prevent host node_modules from overwriting container's
+    stdin_open: true
+    tty: true
+    environment:
+      - WEB_HOST=0.0.0.0
+
   db:
     image: postgres:16
     restart: always
