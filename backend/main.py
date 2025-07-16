@@ -7,7 +7,10 @@ from fastapi.routing import APIRoute
 allowed_origins: list = [
     "http://localhost:49106", # Expo Web on host
     "http://localhost:49100",
-    "http://localhost:49101"
+    "http://localhost:49101",
+    "http://localhost:19006", # Expo Web on host
+    "http://localhost:19000",
+    "http://localhost:19001",
 ]
 
 app = FastAPI(title="Coffee API")
