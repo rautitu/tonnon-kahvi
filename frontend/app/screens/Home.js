@@ -7,7 +7,7 @@ export default function Home({ navigation }) {
   const [message, setMessage] = useState("Loading...");
 
   useEffect(() => {
-    axios.get('http://backend:8000/')
+    axios.get('http://localhost:8000/')
       .then(res => setMessage(res.data.message))
       .catch(err => setMessage("Error fetching welcome message"));
   }, []);
