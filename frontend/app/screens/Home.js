@@ -2,12 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Button, ScrollView  } from 'react-native';
 import axios from 'axios';
 import CoffeeTable from './CoffeesTable';
+import { API_URL } from '../config';
 
 export default function Home({ navigation }) {
   const [message, setMessage] = useState("Loading...");
 
   useEffect(() => {
-    axios.get('http://localhost:8000/')
+    axios.get(`${API_URL}/`)
       .then(res => setMessage(res.data.message))
       .catch(err => setMessage("Error fetching welcome message"));
   }, []);
