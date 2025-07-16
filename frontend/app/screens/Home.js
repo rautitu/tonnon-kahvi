@@ -10,7 +10,10 @@ export default function Home({ navigation }) {
   useEffect(() => {
     axios.get(`${API_URL}/`)
       .then(res => setMessage(res.data.message))
-      .catch(err => setMessage("Error fetching welcome message"));
+      .catch(err => {
+        console.error("Full Axios error:", err.toJSON ? err.toJSON() : err);
+        setMessage("Error fetching welcome message");
+      });
   }, []);
 
   return (
