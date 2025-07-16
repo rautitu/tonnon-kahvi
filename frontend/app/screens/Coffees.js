@@ -2,12 +2,13 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import axios from 'axios';
+import { API_URL } from '../config';
 
 export default function Coffees() {
   const [coffees, setCoffees] = useState(null);
 
   useEffect(() => {
-    axios.get('http://localhost:8000/coffees')
+    axios.get(`${API_URL}/coffees`)
       .then(res => setCoffees(res.data))
       .catch(err => console.error(err));
   }, []);

@@ -2,12 +2,13 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import axios from 'axios';
+import { API_URL } from '../config';
 
 export default function Endpoints() {
   const [data, setData] = useState(null);
 
   useEffect(() => {
-    axios.get('http://localhost:8000/endpoints')
+    axios.get(`${API_URL}/endpoints`)
       .then(res => setData(res.data))
       .catch(() => setData({ message: "Failed to load endpoints", available_endpoints: [] }));
   }, []);
