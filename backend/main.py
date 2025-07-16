@@ -1,16 +1,21 @@
+import requests
 from fastapi import FastAPI
 
 from fastapi.middleware.cors import CORSMiddleware
 from routers.get_coffee_prices import router
 from fastapi.routing import APIRoute
 
+#frontend will be running on same machine as the backend -> get curr machine IP to be allowed in CORS
+try:
+    public_ip: str = requests.get("https://ifconfig.me").text.strip()
+    #print("Detected Public IP:", public_ip)
+except Exception as e:
+    raise RuntimeError(f"Failed to get hosts IP address, full error description: {str(e)}")
+
 allowed_origins: list = [
-    "http://localhost:49106", # Expo Web on host
-    "http://localhost:49100",
-    "http://localhost:49101",
-    "http://localhost:19006", # Expo Web on host
-    "http://localhost:19000",
-    "http://localhost:19001",
+    f"http://{public_ip}:49106", # Expo Web on host
+    f"http://{public_ip}:49100",
+    f"http://{public_ip}:49101"
 ]
 
 app = FastAPI(title="Coffee API")
