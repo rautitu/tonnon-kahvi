@@ -17,6 +17,8 @@ COPY frontend/ .
 EXPOSE 19000 19001 19002 19006
 
 # Start the web server for port 19006
-CMD ["npx", "expo", "start", "--web", "--port", "19006"]
+#CMD ["npx", "expo", "start", "--web", "--port", "19006"]
+CMD ["npx", "expo", "start", "--web", "--host", "0.0.0.0", "--port", "19006"]
+
 
 
