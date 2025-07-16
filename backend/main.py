@@ -18,7 +18,7 @@ allowed_origins: list = [
     f"http://{public_ip}:49101"
 ]
 
-app = FastAPI(title="Coffee API")
+app = FastAPI(title="Tonno coffee API")
 
 app.include_router(router)
 
