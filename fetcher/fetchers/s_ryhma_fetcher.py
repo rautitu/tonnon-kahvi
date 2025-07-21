@@ -47,7 +47,7 @@ class SRyhmaFetcher(BaseProductFetcher):
                 #'available_store': item.get('storeId'),
                 #'available_web': product.get('availability', {}).get('web'),
                 'available_web': None,
-                'net_weight': int(item.get('price')) / int(item.get('comparisonPrice')),
+                'net_weight': float(item.get('price')) / float(item.get('comparisonPrice')),
                 'content_unit': item.get('comparisonUnit'),
                 'image_url': 'not available in S-Ryhma',
                 'brand_name': item.get('brandName'),
