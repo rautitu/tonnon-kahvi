@@ -182,7 +182,7 @@ class SRyhmaFetcher(BaseProductFetcher):
             return "No product data from source, no updates performed."
 
         update_ts = datetime.datetime.now()
-        incoming_ids = tuple(item['id'] for item in product_data)
+        incoming_ids = tuple(str(item['id']) for item in product_data)
 
         with conn.cursor() as cur:
             # 1. Update existing rows that are also in the incoming data.
