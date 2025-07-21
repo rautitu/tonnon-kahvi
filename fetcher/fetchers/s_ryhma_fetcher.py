@@ -72,12 +72,11 @@ class SRyhmaFetcher(BaseProductFetcher):
             'Origin': 'https://www.s-kaupat.fi',
             'x-client-name': 'skaupat-web',
             'x-client-version': 'production-e14c351ce120b6fca5d16451b7a06bae74b4b0f2'
-
         }
 
         #creating a cloudscraper instance instead of using requests directly to handle cloudflare JS challenge
         scraper: cloudscraper.CloudScraper = cloudscraper.create_scraper()
-        response: requests.models.Response = scraper.post(url, headers=headers)
+        response: requests.models.Response = scraper.get(url, headers=headers)
 
         print(f"S-ryhma API response code: {response.status_code}")
 
