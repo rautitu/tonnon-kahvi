@@ -158,7 +158,7 @@ class SRyhmaFetcher(BaseProductFetcher):
                 item['brand_name'], item['normal_price_unit'], item['normal_price'],
                 item['batch_price'], item['batch_discount_pct'],
                 item['batch_discount_type'], item['batch_days_left'],
-                self._data_source  # tonno_data_source (constant value)
+                self.,  # tonno_data_source (constant value)
                 datetime.datetime.now(),  # tonno_load_ts (current time)
                 None  # tonno_end_ts (NULL)
             )
