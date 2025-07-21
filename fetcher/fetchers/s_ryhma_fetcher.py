@@ -2,6 +2,7 @@ import json
 import requests
 import datetime
 import cloudscraper
+import urllib.parse
 
 import psycopg2
 from psycopg2.extras import execute_values
@@ -63,9 +64,29 @@ class SRyhmaFetcher(BaseProductFetcher):
         return extracted_data
 
     def _fetch_prices(self):
-        url = "https://api.s-kaupat.fi/?operationName=RemoteFilteredProducts&variables=%7B%22includeStoreEdgePricing%22%3Atrue%2C%22storeEdgeId%22%3A%22513971200%22%2C%22facets%22%3A%5B%7B%22key%22%3A%22brandName%22%2C%22order%22%3A%22asc%22%7D%2C%7B%22key%22%3A%22category%22%7D%2C%7B%22key%22%3A%22labels%22%7D%5D%2C%22generatedSessionId%22%3A%22fb741e50-639f-4cd1-8fab-c8b8f5101c21%22%2C%22includeAgeLimitedByAlcohol%22%3Atrue%2C%22limit%22%3A24%2C%22queryString%22%3A%22suodatinkahvi%22%2C%22storeId%22%3A%22513971200%22%2C%22useRandomId%22%3Afalse%7D&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%22abbeaf3143217630082d1c0ba36033999b196679bff4b310a0418e290c141426%22%7D%7D"
+        base_url = "https://api.s-kaupat.fi/"
+        variables_template = {
+            "includeStoreEdgePricing": True,
+            "storeEdgeId": "513971200",
+            "facets": [
+                {"key": "brandName", "order": "asc"},
+                {"key": "category"},
+                {"key": "labels"}
+            ],
+            "generatedSessionId": "fb741e50-639f-4cd1-8fab-c8b8f5101c21",
+            "includeAgeLimitedByAlcohol": True,
+            "limit": 24,
+            "queryString": "suodatinkahvi",
+            "storeId": "513971200",
+            "useRandomId": False
+        }
+        extensions = {
+            "persistedQuery": {
+                "version": 1,
+                "sha256Hash": "abbeaf3143217630082d1c0ba36033999b196679bff4b310a0418e290c141426"
+            }
+        }
 
-        #headers discovered with inspecting Network traffic and converting to cURL request
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0',
             'Accept': '*/*',
@@ -75,20 +96,43 @@ class SRyhmaFetcher(BaseProductFetcher):
             'x-client-version': 'production-e14c351ce120b6fca5d16451b7a06bae74b4b0f2'
         }
 
-        #creating a cloudscraper instance instead of using requests directly to handle cloudflare JS challenge
-        scraper: cloudscraper.CloudScraper = cloudscraper.create_scraper()
-        response: requests.models.Response = scraper.get(url, headers=headers)
+        all_data = []
+        offset = 0
+        limit = variables_template["limit"]
 
-        print(f"S-ryhma API response code: {response.status_code}")
+        scraper = cloudscraper.create_scraper()
 
-        if response.status_code == 200:
-            print("Successfully queried S-ryhma API")
-            parsed_response: list = self._extract_product_data(response.json())
-            return parsed_response
-        else:
-            print("Request failed. Response:")
-            print(response.text)
-            raise RuntimeError(f"Failed to fetch data from S-ryhma API, API response code: {response.status_code}")
+        while True:
+            variables_template["from"] = offset
+            variables_str = urllib.parse.quote(json.dumps(variables_template))
+            extensions_str = urllib.parse.quote(json.dumps(extensions))
+
+            url = f"{base_url}?operationName=RemoteFilteredProducts&variables={variables_str}&extensions={extensions_str}"
+
+            response = scraper.get(url, headers=headers)
+            print(f"API call (offset={offset}) response code: {response.status_code}")
+
+            if response.status_code != 200:
+                print("Request failed. Response:")
+                print(response.text)
+                raise RuntimeError(f"Failed to fetch data, status: {response.status_code}")
+
+            json_data = response.json()
+            product_data = self._extract_product_data(json_data)
+            all_data.extend(product_data)
+
+            # Pagination check
+            product_info = json_data["data"]["store"]["products"]
+            total = product_info["total"]
+            received = len(product_info["items"])
+            offset += received
+
+            print(f"Fetched {received} products, total so far: {len(all_data)}")
+
+            if offset >= total:
+                break
+
+        return all_data
 
     def _insert_init_prices(self, conn, product_data: list[dict]) -> str:
         "Initial insert product data into products_and_prices table"
