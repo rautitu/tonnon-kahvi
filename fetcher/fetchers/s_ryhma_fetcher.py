@@ -127,7 +127,7 @@ class SRyhmaFetcher(BaseProductFetcher):
             received = len(product_info["items"])
             offset += received
 
-            print(f"Fetched {received} products, total so far: {len(all_data)}")
+            print(f"S-Ryhma API, fetched {received} products, total so far: {len(all_data)}")
 
             if offset >= total:
                 break
@@ -183,6 +183,7 @@ class SRyhmaFetcher(BaseProductFetcher):
 
         update_ts = datetime.datetime.now()
         incoming_ids = tuple(str(item['id']) for item in product_data)
+        print(type(incoming_ids[0]), repr(incoming_ids[0]))  # should be <class 'str'>
 
         with conn.cursor() as cur:
             # 1. Update existing rows that are also in the incoming data.
