@@ -15,10 +15,10 @@ class SRyhmaFetcher(BaseProductFetcher):
     def target_tbl_has_existing_data(self) -> bool:
         """
         Checks if there are existing rows in the products_and_prices table 
-        for the K-ruoka data source.
+        for the S-Ryhma data source.
         
         Returns:
-            bool: True if there are existing K-ruoka rows (>0), False if no rows (0)
+            bool: True if there are existing S-Ryhma rows (>0), False if no rows (0)
         """
         check_query = f"""
             SELECT COUNT(*) 
@@ -35,46 +35,27 @@ class SRyhmaFetcher(BaseProductFetcher):
     def _extract_product_data(self, json_data: dict):
         extracted_data: list = []
     
-        for item in json_data['result']:
-            product: dict = item['product']
+        for item in json_data['data']['store']['products']['items']:
+            #product: dict = item['product']
             
             extracted_item = {
                 'id': item.get('id'),
-                'name_finnish': product.get('localizedName', {}).get('finnish'),
-                'name_english': product.get('localizedName', {}).get('english'),
-                'available_store': product.get('availability', {}).get('store'),
-                'available_web': product.get('availability', {}).get('web'),
-                'net_weight': product.get('productAttributes', {}).get('measurements', {}).get('netWeight'),
-                'content_unit': product.get('productAttributes', {}).get('measurements', {}).get('contentUnit'),
-                'image_url': product.get('productAttributes', {}).get('image', {}).get('url'),
-                'brand_name': product.get('brand', {}).get('name'),
-                'normal_price_unit': None,
-                'normal_price': None,
-                'batch_price': None,
+                'name_finnish': item.get('name'),
+                'name_english': item.get('name'),
+                'available_store': item.get('storeId'),
+                #'available_web': product.get('availability', {}).get('web'),
+                'available_web': None,
+                'net_weight': int(item.get('price')) / int(item.get('comparisonPrice')),
+                'content_unit': item.get('comparisonUnit'),
+                'image_url': 'not available in S-Ryhma',
+                'brand_name': item.get('brandName'),
+                'normal_price_unit': item.get('pricing', {}).get('comparisonUnit'),
+                'normal_price': item.get('pricing', {}).get('regularPrice'),
+                'batch_price': item.get('pricing', {}).get('currentPrice'),
                 'batch_discount_pct': None,
                 'batch_discount_type': None,
                 'batch_days_left': None
             }
-            
-            # Handle mobilescan pricing data
-            if 'mobilescan' in product:
-                mobilescan = product['mobilescan']
-                if 'pricing' in mobilescan:
-                    pricing = mobilescan['pricing']
-                    if 'normal' in pricing:
-                        normal = pricing['normal']
-                        extracted_item.update({
-                            'normal_price_unit': normal.get('unit'),
-                            'normal_price': normal.get('price')
-                        })
-                    if 'batch' in pricing:
-                        batch = pricing['batch']
-                        extracted_item.update({
-                            'batch_price': batch.get('price'),
-                            'batch_discount_pct': batch.get('discountPercentage'),
-                            'batch_discount_type': batch.get('discountType'),  # Note: typo in original JSON?
-                            'batch_days_left': batch.get('validNumberOfDaysLeft')
-                        })
             
             extracted_data.append(extracted_item)
         
@@ -133,7 +114,7 @@ class SRyhmaFetcher(BaseProductFetcher):
                 item['brand_name'], item['normal_price_unit'], item['normal_price'],
                 item['batch_price'], item['batch_discount_pct'],
                 item['batch_discount_type'], item['batch_days_left'],
-                "K-ruoka",  # tonno_data_source (constant value)
+                "S-ryhma",  # tonno_data_source (constant value)
                 datetime.datetime.now(),  # tonno_load_ts (current time)
                 None  # tonno_end_ts (NULL)
             )
@@ -202,7 +183,7 @@ class SRyhmaFetcher(BaseProductFetcher):
                     item['brand_name'], item['normal_price_unit'], item['normal_price'],
                     item['batch_price'], item['batch_discount_pct'],
                     item['batch_discount_type'], item['batch_days_left'],
-                    "K-ruoka",      # tonno_data_source
+                    "S-Ryhma",      # tonno_data_source
                     update_ts,      # tonno_load_ts (use the consistent timestamp)
                     None            # tonno_end_ts (NULL for current version)
                 )
