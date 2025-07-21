@@ -11,7 +11,7 @@ from fetcher.base_fetcher import BaseProductFetcher
 
 class SRyhmaFetcher(BaseProductFetcher):
     category: str = 'suodatinkahvi'
-    _data_source: str = 'S-Ryhma'
+    _data_source: str = 'S-ryhma'
 
     def target_tbl_has_existing_data(self) -> bool:
         """
@@ -49,7 +49,7 @@ class SRyhmaFetcher(BaseProductFetcher):
                 'available_web': None,
                 'net_weight': float(item.get('price')) / float(item.get('comparisonPrice')),
                 'content_unit': item.get('comparisonUnit'),
-                'image_url': 'not available in S-Ryhma',
+                'image_url': 'not available in S-ryhma',
                 'brand_name': item.get('brandName'),
                 'normal_price_unit': item.get('pricing', {}).get('comparisonUnit'),
                 'normal_price': item.get('pricing', {}).get('regularPrice'),
@@ -158,7 +158,7 @@ class SRyhmaFetcher(BaseProductFetcher):
                 item['brand_name'], item['normal_price_unit'], item['normal_price'],
                 item['batch_price'], item['batch_discount_pct'],
                 item['batch_discount_type'], item['batch_days_left'],
-                "S-ryhma",  # tonno_data_source (constant value)
+                self._data_source  # tonno_data_source (constant value)
                 datetime.datetime.now(),  # tonno_load_ts (current time)
                 None  # tonno_end_ts (NULL)
             )
@@ -227,7 +227,7 @@ class SRyhmaFetcher(BaseProductFetcher):
                     item['brand_name'], item['normal_price_unit'], item['normal_price'],
                     item['batch_price'], item['batch_discount_pct'],
                     item['batch_discount_type'], item['batch_days_left'],
-                    "S-Ryhma",      # tonno_data_source
+                    self._data_source,      # tonno_data_source
                     update_ts,      # tonno_load_ts (use the consistent timestamp)
                     None            # tonno_end_ts (NULL for current version)
                 )
