@@ -169,9 +169,13 @@ class KRuokaFetcher(BaseProductFetcher):
             update_existing_query = """
                 UPDATE products_and_prices
                 SET tonno_end_ts = %s
-                WHERE id = ANY(%s) AND tonno_end_ts IS NULL;
+                WHERE 
+                    id = ANY(%s) AND 
+                    tonno_end_ts IS NULL AND
+                    tonno_data_source = %s
+                ;
             """
-            cur.execute(update_existing_query, (update_ts, list(incoming_ids)))
+            cur.execute(update_existing_query, (update_ts, list(incoming_ids), self._data_source))
             updated_count = cur.rowcount
 
             # 2. Mark products that have disappeared from the source as historical.
@@ -179,9 +183,13 @@ class KRuokaFetcher(BaseProductFetcher):
             update_disappeared_query = """
                 UPDATE products_and_prices
                 SET tonno_end_ts = %s
-                WHERE id NOT IN %s AND tonno_end_ts IS NULL;
+                WHERE 
+                    id NOT IN %s AND
+                    tonno_end_ts IS NULL AND
+                    tonno_data_source = %s
+                ;
             """
-            cur.execute(update_disappeared_query, (update_ts, incoming_ids))
+            cur.execute(update_disappeared_query, (update_ts, incoming_ids, self._data_source))
             disappeared_count = cur.rowcount
 
             # 3. Insert all incoming products as the new "current" rows.
