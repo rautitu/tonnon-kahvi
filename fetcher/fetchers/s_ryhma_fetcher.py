@@ -2,6 +2,7 @@ import json
 import requests
 import datetime
 import cloudscraper
+import urllib.parse
 import logging
 
 import psycopg2
@@ -15,19 +16,20 @@ logging.basicConfig(
     format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
     handlers=[logging.StreamHandler()]
 )
-logger = logging.getLogger("k-ruoka-fetcher")
+logger = logging.getLogger("s-ryhma-fetcher")
 
-class KRuokaFetcher(BaseProductFetcher):
+
+class SRyhmaFetcher(BaseProductFetcher):
     category: str = 'suodatinkahvi'
-    _data_source: str = 'K-ruoka'
+    _data_source: str = 'S-ryhma'
 
     def target_tbl_has_existing_data(self) -> bool:
         """
         Checks if there are existing rows in the products_and_prices table 
-        for the K-ruoka data source.
+        for the S-Ryhma data source.
         
         Returns:
-            bool: True if there are existing K-ruoka rows (>0), False if no rows (0)
+            bool: True if there are existing S-Ryhma rows (>0), False if no rows (0)
         """
         check_query = f"""
             SELECT COUNT(*) 
@@ -44,80 +46,101 @@ class KRuokaFetcher(BaseProductFetcher):
     def _extract_product_data(self, json_data: dict):
         extracted_data: list = []
     
-        for item in json_data['result']:
-            product: dict = item['product']
+        for item in json_data['data']['store']['products']['items']:
+            #product: dict = item['product']
             
             extracted_item = {
                 'id': item.get('id'),
-                'name_finnish': product.get('localizedName', {}).get('finnish'),
-                'name_english': product.get('localizedName', {}).get('english'),
-                'available_store': product.get('availability', {}).get('store'),
-                'available_web': product.get('availability', {}).get('web'),
-                'net_weight': product.get('productAttributes', {}).get('measurements', {}).get('netWeight'),
-                'content_unit': product.get('productAttributes', {}).get('measurements', {}).get('contentUnit'),
-                'image_url': product.get('productAttributes', {}).get('image', {}).get('url'),
-                'brand_name': product.get('brand', {}).get('name'),
-                'normal_price_unit': None,
-                'normal_price': None,
-                'batch_price': None,
+                'name_finnish': item.get('name'),
+                'name_english': item.get('name'),
+                'available_store': True,
+                #'available_store': item.get('storeId'),
+                #'available_web': product.get('availability', {}).get('web'),
+                'available_web': None,
+                'net_weight': float(item.get('price')) / float(item.get('comparisonPrice')),
+                'content_unit': item.get('comparisonUnit'),
+                'image_url': 'not available in S-ryhma',
+                'brand_name': item.get('brandName'),
+                'normal_price_unit': item.get('pricing', {}).get('comparisonUnit'),
+                'normal_price': item.get('pricing', {}).get('regularPrice'),
+                'batch_price': item.get('pricing', {}).get('currentPrice'),
                 'batch_discount_pct': None,
                 'batch_discount_type': None,
                 'batch_days_left': None
             }
-            
-            # Handle mobilescan pricing data
-            if 'mobilescan' in product:
-                mobilescan = product['mobilescan']
-                if 'pricing' in mobilescan:
-                    pricing = mobilescan['pricing']
-                    if 'normal' in pricing:
-                        normal = pricing['normal']
-                        extracted_item.update({
-                            'normal_price_unit': normal.get('unit'),
-                            'normal_price': normal.get('price')
-                        })
-                    if 'batch' in pricing:
-                        batch = pricing['batch']
-                        extracted_item.update({
-                            'batch_price': batch.get('price'),
-                            'batch_discount_pct': batch.get('discountPercentage'),
-                            'batch_discount_type': batch.get('discountType'),  # Note: typo in original JSON?
-                            'batch_days_left': batch.get('validNumberOfDaysLeft')
-                        })
             
             extracted_data.append(extracted_item)
         
         return extracted_data
 
     def _fetch_prices(self):
-        url = "https://www.k-ruoka.fi/kr-api/v2/product-search/suodatinkahvi?storeId=N106&offset=0&limit=100"
-
-        #headers discovered with inspecting Network traffic and converting to cURL request
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0',
-            'Accept': 'application/json',
-            'X-K-Build-Number': '24596', #this is atleast crucial
-            'Origin': 'https://www.k-ruoka.fi',
-            'Referer': 'https://www.k-ruoka.fi/haku?q=suodatinkahvi',
-            'Accept-Language': 'en-US,en;q=0.5',
-            'Connection': 'keep-alive',
-            'Sec-Fetch-Dest': 'empty',
-            'Sec-Fetch-Mode': 'cors',
-            'Sec-Fetch-Site': 'same-origin',
+        base_url = "https://api.s-kaupat.fi/"
+        variables_template = {
+            "includeStoreEdgePricing": True,
+            "storeEdgeId": "513971200",
+            "facets": [
+                {"key": "brandName", "order": "asc"},
+                {"key": "category"},
+                {"key": "labels"}
+            ],
+            "generatedSessionId": "fb741e50-639f-4cd1-8fab-c8b8f5101c21",
+            "includeAgeLimitedByAlcohol": True,
+            "limit": 24,
+            "queryString": "suodatinkahvi",
+            "storeId": "513971200",
+            "useRandomId": False
+        }
+        extensions = {
+            "persistedQuery": {
+                "version": 1,
+                "sha256Hash": "abbeaf3143217630082d1c0ba36033999b196679bff4b310a0418e290c141426"
+            }
         }
 
-        #creating a cloudscraper instance instead of using requests directly to handle cloudflare JS challenge
-        scraper: cloudscraper.CloudScraper = cloudscraper.create_scraper()
-        response: requests.models.Response = scraper.post(url, headers=headers)
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0',
+            'Accept': '*/*',
+            'Content-Type': 'application/json',
+            'Origin': 'https://www.s-kaupat.fi',
+            'x-client-name': 'skaupat-web',
+            'x-client-version': 'production-e14c351ce120b6fca5d16451b7a06bae74b4b0f2'
+        }
 
-        logger.info(f"K-Ruoka API response code: {response.status_code}")
+        all_data = []
+        offset = 0
+        limit = variables_template["limit"]
 
-        if response.status_code == 200:
-            logger.info("Successfully queried K-Ruoka API")
-            parsed_response: list = self._extract_product_data(response.json())
-            return parsed_response
-        else:
-            logger.exception(f"Failed to fetch data from K-Ruoka API, API response code: {response.status_code}, full response: {response.text}")
+        scraper = cloudscraper.create_scraper()
+
+        while True:
+            variables_template["from"] = offset
+            variables_str = urllib.parse.quote(json.dumps(variables_template))
+            extensions_str = urllib.parse.quote(json.dumps(extensions))
+
+            url = f"{base_url}?operationName=RemoteFilteredProducts&variables={variables_str}&extensions={extensions_str}"
+
+            response = scraper.get(url, headers=headers)
+            print(f"API call (offset={offset}) response code: {response.status_code}")
+
+            if response.status_code != 200:
+                logger.exception(f"Failed to fetch S-ryhma data, status: {response.status_code}, full response: {response.text}")
+
+            json_data = response.json()
+            product_data = self._extract_product_data(json_data)
+            all_data.extend(product_data)
+
+            # Pagination check
+            product_info = json_data["data"]["store"]["products"]
+            total = product_info["total"]
+            received = len(product_info["items"])
+            offset += received
+
+            logger.info(f"S-Ryhma API, fetched {received} products, total so far: {len(all_data)}")
+
+            if offset >= total:
+                break
+
+        return all_data
 
     def _insert_init_prices(self, conn, product_data: list[dict]) -> str:
         "Initial insert product data into products_and_prices table"
@@ -167,7 +190,7 @@ class KRuokaFetcher(BaseProductFetcher):
             return "No product data from source, no updates performed."
 
         update_ts = datetime.datetime.now()
-        incoming_ids = tuple(item['id'] for item in product_data)
+        incoming_ids = tuple(str(item['id']) for item in product_data)
 
         with conn.cursor() as cur:
             # 1. Update existing rows that are also in the incoming data.
@@ -191,7 +214,7 @@ class KRuokaFetcher(BaseProductFetcher):
                 UPDATE products_and_prices
                 SET tonno_end_ts = %s
                 WHERE 
-                    id NOT IN %s AND
+                    id NOT IN %s AND 
                     tonno_end_ts IS NULL AND
                     tonno_data_source = %s
                 ;

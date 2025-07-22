@@ -4,6 +4,7 @@ import logging
 import psycopg2
 
 from fetcher.fetchers.kesko_fetcher import KRuokaFetcher
+from fetcher.fetchers.s_ryhma_fetcher import SRyhmaFetcher
 from unit_tests import test_postgres_existence
 
 # Configure logging to stdout (Docker captures this)
@@ -54,7 +55,7 @@ if __name__ == "__main__":
         logger.info("🔁 Starting new fetch/update cycle...")
         try:
             wait_for_postgres(max_retries=10, delay=2)
-            fetchers = [KRuokaFetcher()]
+            fetchers = [KRuokaFetcher(), SRyhmaFetcher()]
             fetchers_results = orchestrate_init_or_update(fetchers)
             logger.info(f"Cycle completed with results: {fetchers_results}")
         except Exception as e:
