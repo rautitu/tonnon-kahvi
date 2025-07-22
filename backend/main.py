@@ -15,7 +15,10 @@ except Exception as e:
 allowed_origins: list = [
     f"http://{public_ip}:49106", # Expo Web on host
     f"http://{public_ip}:49100",
-    f"http://{public_ip}:49101"
+    f"http://{public_ip}:49101",
+    f"http://tonnopannu.duckdns.org:49106", # Expo Web on host
+    f"http://tonnopannu.duckdns.org:49100",
+    f"http://tonnopannu.duckdns.org:49101",
 ]
 
 app = FastAPI(title="Tonno coffee API")
