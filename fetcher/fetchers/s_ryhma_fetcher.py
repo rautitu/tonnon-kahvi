@@ -3,11 +3,21 @@ import requests
 import datetime
 import cloudscraper
 import urllib.parse
+import logging
 
 import psycopg2
 from psycopg2.extras import execute_values
 
 from fetcher.base_fetcher import BaseProductFetcher
+
+# Configure logging to stdout (Docker captures this)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+    handlers=[logging.StreamHandler()]
+)
+logger = logging.getLogger("s-ryhma-fetcher")
+
 
 class SRyhmaFetcher(BaseProductFetcher):
     category: str = 'suodatinkahvi'
@@ -113,9 +123,7 @@ class SRyhmaFetcher(BaseProductFetcher):
             print(f"API call (offset={offset}) response code: {response.status_code}")
 
             if response.status_code != 200:
-                print("Request failed. Response:")
-                print(response.text)
-                raise RuntimeError(f"Failed to fetch data, status: {response.status_code}")
+                logger.exception(f"Failed to fetch S-ryhma data, status: {response.status_code}, full response: {response.text}")
 
             json_data = response.json()
             product_data = self._extract_product_data(json_data)
@@ -127,7 +135,7 @@ class SRyhmaFetcher(BaseProductFetcher):
             received = len(product_info["items"])
             offset += received
 
-            print(f"S-Ryhma API, fetched {received} products, total so far: {len(all_data)}")
+            logger.info(f"S-Ryhma API, fetched {received} products, total so far: {len(all_data)}")
 
             if offset >= total:
                 break
@@ -183,7 +191,6 @@ class SRyhmaFetcher(BaseProductFetcher):
 
         update_ts = datetime.datetime.now()
         incoming_ids = tuple(str(item['id']) for item in product_data)
-        print(type(incoming_ids[0]), repr(incoming_ids[0]))  # should be <class 'str'>
 
         with conn.cursor() as cur:
             # 1. Update existing rows that are also in the incoming data.

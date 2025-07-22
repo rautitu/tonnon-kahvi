@@ -2,11 +2,20 @@ import json
 import requests
 import datetime
 import cloudscraper
+import logging
 
 import psycopg2
 from psycopg2.extras import execute_values
 
 from fetcher.base_fetcher import BaseProductFetcher
+
+# Configure logging to stdout (Docker captures this)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+    handlers=[logging.StreamHandler()]
+)
+logger = logging.getLogger("k-ruoka-fetcher")
 
 class KRuokaFetcher(BaseProductFetcher):
     category: str = 'suodatinkahvi'
@@ -101,16 +110,14 @@ class KRuokaFetcher(BaseProductFetcher):
         scraper: cloudscraper.CloudScraper = cloudscraper.create_scraper()
         response: requests.models.Response = scraper.post(url, headers=headers)
 
-        print(f"K-Ruoka API response code: {response.status_code}")
+        logger.info(f"K-Ruoka API response code: {response.status_code}")
 
         if response.status_code == 200:
-            print("Successfully queried K-Ruoka API")
+            logger.info("Successfully queried K-Ruoka API")
             parsed_response: list = self._extract_product_data(response.json())
             return parsed_response
         else:
-            print("Request failed. Response:")
-            print(response.text)
-            raise RuntimeError(f"Failed to fetch data from K-Ruoka API, API response code: {response.status_code}")
+            logger.exception(f"Failed to fetch data from K-Ruoka API, API response code: {response.status_code}, full response: {response.text}")
 
     def _insert_init_prices(self, conn, product_data: list[dict]) -> str:
         "Initial insert product data into products_and_prices table"
