@@ -110,10 +110,10 @@ const CoffeeTable = () => {
         <Text style={styles.cellText}>{item.name_finnish}</Text>
       </View>
       <View style={styles.cell}>
-        <Text style={styles.cellText}>€{item.normal_price.toFixed(2)}</Text>
+        <Text style={styles.cellText}>{item.normal_price.toFixed(2)} €</Text>
       </View>
       <View style={styles.cell}>
-        <Text style={styles.cellText}>{item.net_weight}g</Text>
+        <Text style={styles.cellText}>{item.net_weight.toFixed(2)} kg</Text>
       </View>
       <View style={styles.cell}>
         <Text style={styles.cellText}>{item.data_source}</Text>
