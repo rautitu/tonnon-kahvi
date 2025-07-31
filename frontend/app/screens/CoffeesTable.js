@@ -201,11 +201,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   priceFilters: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    //flexDirection: 'row',
+    //justifyContent: 'space-between',
   },
   priceInput: {
-    flex: 0.48,
+    //flex: 0.48,
+    marginBottom: 8,
+
   },
   tableContainer: {
     flex: 1,
