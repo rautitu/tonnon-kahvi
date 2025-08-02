@@ -28,6 +28,7 @@ const CoffeeTable = () => {
     try {
       const response = await fetch(`${API_URL}/coffees`);
       const data = await response.json();
+      console.log(data)
       setCoffeeData(data);
     } catch (error) {
       console.error('Error fetching coffee data:', error);
