@@ -11,7 +11,7 @@ import { API_URL } from '../config';
 
 const CoffeeTable = () => {
   const [coffeeData, setCoffeeData] = useState([]);
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const [sortConfig, setSortConfig] = useState({ key: "normal_price", direction: 'asc' }); //defaulting the sort to be from smallest price
   const [filters, setFilters] = useState({
     name: '',
     dataSource: '',
