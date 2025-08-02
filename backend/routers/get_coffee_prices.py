@@ -19,6 +19,7 @@ def get_coffee_prices(db=Depends(get_db)):
             name_finnish, 
             normal_price, 
             net_weight,
+            normal_price / net_weight as price_per_wright,
             tonno_data_source 
         FROM products_and_prices
         WHERE tonno_end_ts IS NULL
