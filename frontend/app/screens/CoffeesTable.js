@@ -121,6 +121,9 @@ const CoffeeTable = () => {
         <Text style={styles.cellText}>{item.net_weight.toFixed(2)} kg</Text>
       </View>
       <View style={styles.cell}>
+        <Text style={styles.cellText}>{item.price_per_weight.toFixed(2)} kg</Text>
+      </View>
+      <View style={styles.cell}>
         <Text style={styles.cellText}>{item.data_source}</Text>
       </View>
     </View>
