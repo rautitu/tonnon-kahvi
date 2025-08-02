@@ -93,6 +93,11 @@ const CoffeeTable = () => {
         style={styles.headerCell} 
         onPress={() => handleSort('net_weight')}
       >
+        <Text style={styles.headerText}>Price per weight {getSortIcon('price_per_weight')}</Text>
+      </TouchableOpacity>
+      <TouchableOpacity 
+        style={styles.headerCell} 
+      >
         <Text style={styles.headerText}>Weight {getSortIcon('net_weight')}</Text>
       </TouchableOpacity>
       <TouchableOpacity 
