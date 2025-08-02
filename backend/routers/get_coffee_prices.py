@@ -9,6 +9,7 @@ class CoffeeOut(BaseModel):
     name_finnish: str
     normal_price: float
     net_weight: float
+    price_per_weight: float
     data_source: str
 
 @router.get("/coffees", response_model=list[CoffeeOut])
