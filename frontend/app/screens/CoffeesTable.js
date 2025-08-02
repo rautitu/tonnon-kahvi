@@ -19,7 +19,7 @@ const CoffeeTable = () => {
     maxPrice: '',
   });
 
-  // Fetch data from your backend
+  // Fetch data from your backend 
   useEffect(() => {
     fetchCoffeeData();
   }, []);
@@ -28,7 +28,6 @@ const CoffeeTable = () => {
     try {
       const response = await fetch(`${API_URL}/coffees`);
       const data = await response.json();
-      console.log(data)
       setCoffeeData(data);
     } catch (error) {
       console.error('Error fetching coffee data:', error);
@@ -123,7 +122,7 @@ const CoffeeTable = () => {
         <Text style={styles.cellText}>{item.net_weight.toFixed(2)} kg</Text>
       </View>
       <View style={styles.cell}>
-        <Text style={styles.cellText}>{item.price_per_weight} kg / €</Text>
+        <Text style={styles.cellText}>{item.price_per_weight.toFixed(2)} kg / €</Text>
       </View>
       <View style={styles.cell}>
         <Text style={styles.cellText}>{item.data_source}</Text>
