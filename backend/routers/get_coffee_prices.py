@@ -19,7 +19,7 @@ def get_coffee_prices(db=Depends(get_db)):
             name_finnish, 
             normal_price, 
             net_weight,
-            normal_price / net_weight as price_per_wright,
+            normal_price / net_weight as price_per_weight,
             tonno_data_source 
         FROM products_and_prices
         WHERE tonno_end_ts IS NULL
@@ -27,4 +27,4 @@ def get_coffee_prices(db=Depends(get_db)):
     )
     rows = cursor.fetchall()
     cursor.close()
-    return [CoffeeOut(name_finnish=row[0], normal_price=row[1], net_weight=row[2], data_source=row[3]) for row in rows]
+    return [CoffeeOut(name_finnish=row[0], normal_price=row[1], net_weight=row[2], data_source=row[3], price_per_weight=row[4]) for row in rows]
