@@ -88,7 +88,7 @@ class SRyhmaFetcher(BaseProductFetcher):
             "includeAgeLimitedByAlcohol": True,
             "limit": 24,
             "queryString": "suodatinkahvi",
-            "storeId": "513971200",
+            "storeId": "726308750",
             "useRandomId": False
         }
         extensions = {
