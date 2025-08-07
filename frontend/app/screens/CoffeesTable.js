@@ -6,6 +6,7 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  Dimensions,
 } from 'react-native';
 import { API_URL } from '../config';
 
@@ -18,6 +19,19 @@ const CoffeeTable = () => {
     minPrice: '',
     maxPrice: '',
   });
+  const [screenWidth, setScreenWidth] = useState(Dimensions.get('window').width);
+
+  // Listen for screen dimension changes
+  useEffect(() => {
+    const subscription = Dimensions.addEventListener('change', ({ window }) => {
+      setScreenWidth(window.width);
+    });
+
+    return () => subscription?.remove();
+  }, []);
+
+  // Determine if we should show mobile layout (hide Price and Weight columns)
+  const isMobile = screenWidth < 768; // Adjust breakpoint as needed
 
   // Fetch data from your backend 
   useEffect(() => {
@@ -83,18 +97,27 @@ const CoffeeTable = () => {
       >
         <Text style={styles.headerText}>Name {getSortIcon('name_finnish')}</Text>
       </TouchableOpacity>
-      <TouchableOpacity 
-        style={styles.headerCell} 
-        onPress={() => handleSort('normal_price')}
-      >
-        <Text style={styles.headerText}>Price {getSortIcon('normal_price')}</Text>
-      </TouchableOpacity>
-      <TouchableOpacity 
-        style={styles.headerCell} 
-        onPress={() => handleSort('net_weight')}
-      >
-        <Text style={styles.headerText}>Weight {getSortIcon('net_weight')}</Text>
-      </TouchableOpacity>
+      
+      {/* Hide Price column on mobile */}
+      {!isMobile && (
+        <TouchableOpacity 
+          style={styles.headerCell} 
+          onPress={() => handleSort('normal_price')}
+        >
+          <Text style={styles.headerText}>Price {getSortIcon('normal_price')}</Text>
+        </TouchableOpacity>
+      )}
+      
+      {/* Hide Weight column on mobile */}
+      {!isMobile && (
+        <TouchableOpacity 
+          style={styles.headerCell} 
+          onPress={() => handleSort('net_weight')}
+        >
+          <Text style={styles.headerText}>Weight {getSortIcon('net_weight')}</Text>
+        </TouchableOpacity>
+      )}
+      
       <TouchableOpacity 
         style={styles.headerCell} 
         onPress={() => handleSort('price_per_weight')}
@@ -115,12 +138,21 @@ const CoffeeTable = () => {
       <View style={styles.cell}>
         <Text style={styles.cellText}>{item.name_finnish}</Text>
       </View>
-      <View style={styles.cell}>
-        <Text style={styles.cellText}>{item.normal_price.toFixed(2)} €</Text>
-      </View>
-      <View style={styles.cell}>
-        <Text style={styles.cellText}>{item.net_weight.toFixed(2)} kg</Text>
-      </View>
+      
+      {/* Hide Price cell on mobile */}
+      {!isMobile && (
+        <View style={styles.cell}>
+          <Text style={styles.cellText}>{item.normal_price.toFixed(2)} €</Text>
+        </View>
+      )}
+      
+      {/* Hide Weight cell on mobile */}
+      {!isMobile && (
+        <View style={styles.cell}>
+          <Text style={styles.cellText}>{item.net_weight.toFixed(2)} kg</Text>
+        </View>
+      )}
+      
       <View style={styles.cell}>
         <Text style={styles.cellText}>{item.price_per_weight.toFixed(2)} € / kg</Text>
       </View>
@@ -216,7 +248,6 @@ const styles = StyleSheet.create({
   priceInput: {
     //flex: 0.48,
     marginBottom: 8,
-
   },
   tableContainer: {
     flex: 1,
