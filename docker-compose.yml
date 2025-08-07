@@ -10,6 +10,7 @@ services:
       DB_USER: coffee
       DB_PASSWORD: coffee123
       DB_NAME: coffee_prices
+    restart: unless-stopped
 
   backend:
     build:
@@ -24,6 +25,7 @@ services:
       DB_USER: coffee
       DB_PASSWORD: coffee123
       DB_NAME: coffee_prices
+    restart: unless-stopped
 
   frontend:
     build:
@@ -41,6 +43,7 @@ services:
     tty: true
     environment:
       - WEB_HOST=0.0.0.0
+    restart: unless-stopped
 
   db:
     image: postgres:16
