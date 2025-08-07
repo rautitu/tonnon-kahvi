@@ -11,3 +11,6 @@ const getHost = () => {
 };
 
 export const API_URL = `http://${getHost()}:8000`;
+
+// Determine if we should show mobile layout on frontend based on this screen width value
+export const MOBILE_SCREEN_WIDTH_THRESHOLD = 768;

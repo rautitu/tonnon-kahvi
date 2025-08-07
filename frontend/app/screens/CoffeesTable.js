@@ -6,20 +6,34 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  Dimensions,
 } from 'react-native';
-import { API_URL } from '../config';
+import { API_URL, MOBILE_SCREEN_WIDTH_THRESHOLD } from '../config';
 
 const CoffeeTable = () => {
   const [coffeeData, setCoffeeData] = useState([]);
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const [sortConfig, setSortConfig] = useState({ key: "normal_price", direction: 'asc' }); //defaulting the sort to be from smallest price
   const [filters, setFilters] = useState({
     name: '',
     dataSource: '',
     minPrice: '',
     maxPrice: '',
   });
+  const [screenWidth, setScreenWidth] = useState(Dimensions.get('window').width);
 
-  // Fetch data from your backend
+  // Listen for screen dimension changes
+  useEffect(() => {
+    const subscription = Dimensions.addEventListener('change', ({ window }) => {
+      setScreenWidth(window.width);
+    });
+
+    return () => subscription?.remove();
+  }, []);
+
+  // Determine if we should show mobile layout (hide Price and Weight columns)
+  const isMobile = screenWidth < MOBILE_SCREEN_WIDTH_THRESHOLD;
+
+  // Fetch data from your backend 
   useEffect(() => {
     fetchCoffeeData();
   }, []);
@@ -83,22 +97,37 @@ const CoffeeTable = () => {
       >
         <Text style={styles.headerText}>Name {getSortIcon('name_finnish')}</Text>
       </TouchableOpacity>
+      
+      {/* Hide Price column on mobile */}
+      {!isMobile && (
+        <TouchableOpacity 
+          style={styles.headerCell} 
+          onPress={() => handleSort('normal_price')}
+        >
+          <Text style={styles.headerText}>Price {getSortIcon('normal_price')}</Text>
+        </TouchableOpacity>
+      )}
+      
+      {/* Hide Weight column on mobile */}
+      {!isMobile && (
+        <TouchableOpacity 
+          style={styles.headerCell} 
+          onPress={() => handleSort('net_weight')}
+        >
+          <Text style={styles.headerText}>Weight {getSortIcon('net_weight')}</Text>
+        </TouchableOpacity>
+      )}
+      
       <TouchableOpacity 
         style={styles.headerCell} 
-        onPress={() => handleSort('normal_price')}
+        onPress={() => handleSort('price_per_weight')}
       >
-        <Text style={styles.headerText}>Price {getSortIcon('normal_price')}</Text>
-      </TouchableOpacity>
-      <TouchableOpacity 
-        style={styles.headerCell} 
-        onPress={() => handleSort('net_weight')}
-      >
-        <Text style={styles.headerText}>Weight {getSortIcon('net_weight')}</Text>
+        <Text style={styles.headerText}>Price per weight {getSortIcon('price_per_weight')}</Text>
       </TouchableOpacity>
       <TouchableOpacity 
         style={styles.headerCell} 
         onPress={() => handleSort('data_source')}
-      >
+      >        
         <Text style={styles.headerText}>Source {getSortIcon('data_source')}</Text>
       </TouchableOpacity>
     </View>
@@ -109,11 +138,23 @@ const CoffeeTable = () => {
       <View style={styles.cell}>
         <Text style={styles.cellText}>{item.name_finnish}</Text>
       </View>
+      
+      {/* Hide Price cell on mobile */}
+      {!isMobile && (
+        <View style={styles.cell}>
+          <Text style={styles.cellText}>{item.normal_price.toFixed(2)} €</Text>
+        </View>
+      )}
+      
+      {/* Hide Weight cell on mobile */}
+      {!isMobile && (
+        <View style={styles.cell}>
+          <Text style={styles.cellText}>{item.net_weight.toFixed(2)} kg</Text>
+        </View>
+      )}
+      
       <View style={styles.cell}>
-        <Text style={styles.cellText}>€{item.normal_price.toFixed(2)}</Text>
-      </View>
-      <View style={styles.cell}>
-        <Text style={styles.cellText}>{item.net_weight}g</Text>
+        <Text style={styles.cellText}>{item.price_per_weight.toFixed(2)} € / kg</Text>
       </View>
       <View style={styles.cell}>
         <Text style={styles.cellText}>{item.data_source}</Text>
@@ -201,11 +242,12 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   priceFilters: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    //flexDirection: 'row',
+    //justifyContent: 'space-between',
   },
   priceInput: {
-    flex: 0.48,
+    //flex: 0.48,
+    marginBottom: 8,
   },
   tableContainer: {
     flex: 1,
