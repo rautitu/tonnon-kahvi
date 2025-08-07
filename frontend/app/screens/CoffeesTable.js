@@ -8,7 +8,7 @@ import {
   StyleSheet,
   Dimensions,
 } from 'react-native';
-import { API_URL } from '../config';
+import { API_URL, MOBILE_SCREEN_WIDTH_THRESHOLD } from '../config';
 
 const CoffeeTable = () => {
   const [coffeeData, setCoffeeData] = useState([]);
@@ -31,7 +31,7 @@ const CoffeeTable = () => {
   }, []);
 
   // Determine if we should show mobile layout (hide Price and Weight columns)
-  const isMobile = screenWidth < 768; // Adjust breakpoint as needed
+  const isMobile = screenWidth < MOBILE_SCREEN_WIDTH_THRESHOLD;
 
   // Fetch data from your backend 
   useEffect(() => {
