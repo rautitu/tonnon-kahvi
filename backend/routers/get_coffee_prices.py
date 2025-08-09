@@ -35,8 +35,8 @@ def get_coffee_prices(db=Depends(get_db)):
             bb.current_price as normal_price,  
             aa.net_weight, 
             bb.current_price / aa.net_weight as price_per_weight, 
-            bb.fl_deal_price, 
-            aa.tonno_data_source  
+            aa.tonno_data_source,
+            bb.fl_deal_price
         FROM products_and_prices aa 
             left join get_correct_price bb 
                 on aa.id = bb.id 
