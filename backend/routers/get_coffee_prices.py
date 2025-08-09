@@ -16,15 +16,32 @@ class CoffeeOut(BaseModel):
 def get_coffee_prices(db=Depends(get_db)):
     cursor = db.cursor()
     cursor.execute("""
-        SELECT 
-            name_finnish, 
-            normal_price, 
-            net_weight,
-            normal_price / net_weight as price_per_weight,
-            tonno_data_source 
-        FROM products_and_prices
-        WHERE tonno_end_ts IS NULL
-        """
+        with get_correct_price as ( 
+            select  
+                id, 
+                case  
+                    when batch_price is not null and batch_price < normal_price then batch_price 
+                    else normal_price 
+                end as current_price, 
+                case  
+                    when batch_price is not null and batch_price < normal_price then 1 
+                    else 0 
+                end as fl_deal_price
+                FROM products_and_prices 
+                WHERE tonno_end_ts IS NULL 
+        ) 
+        SELECT  
+            aa.name_finnish,
+            bb.current_price as normal_price,  
+            aa.net_weight, 
+            bb.current_price / aa.net_weight as price_per_weight, 
+            bb.fl_deal_price, 
+            aa.tonno_data_source  
+        FROM products_and_prices aa 
+            left join get_correct_price bb 
+                on aa.id = bb.id 
+        WHERE aa.tonno_end_ts IS NULL
+    """
     )
     rows = cursor.fetchall()
     cursor.close()
