@@ -4,6 +4,7 @@ import datetime
 import cloudscraper
 import urllib.parse
 import logging
+import uuid
 
 import psycopg2
 from psycopg2.extras import execute_values
@@ -83,11 +84,11 @@ class SRyhmaFetcher(BaseProductFetcher):
                 {"key": "category"},
                 {"key": "labels"}
             ],
-            "generatedSessionId": "fb741e50-639f-4cd1-8fab-c8b8f5101c21",
+            "generatedSessionId": str(uuid.uuid4()),
             "includeAgeLimitedByAlcohol": True,
             "limit": 24,
             "queryString": "suodatinkahvi",
-            "storeId": "513971200",
+            "storeId": "726308750",
             "useRandomId": False
         }
         extensions = {

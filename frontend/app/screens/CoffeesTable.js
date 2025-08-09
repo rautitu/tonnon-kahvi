@@ -12,7 +12,7 @@ import { API_URL, MOBILE_SCREEN_WIDTH_THRESHOLD } from '../config';
 
 const CoffeeTable = () => {
   const [coffeeData, setCoffeeData] = useState([]);
-  const [sortConfig, setSortConfig] = useState({ key: "normal_price", direction: 'asc' }); //defaulting the sort to be from smallest price
+  const [sortConfig, setSortConfig] = useState({ key: "price_per_weight", direction: 'asc' }); //defaulting the sort to be from smallest price per weight
   const [filters, setFilters] = useState({
     name: '',
     dataSource: '',
