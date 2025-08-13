@@ -11,6 +11,7 @@ class CoffeeOut(BaseModel):
     net_weight: float
     price_per_weight: float
     data_source: str
+    data_fetched_ts: str
 
 @router.get("/coffees", response_model=list[CoffeeOut])
 def get_coffee_prices(db=Depends(get_db)):
