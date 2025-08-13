@@ -11,6 +11,7 @@ class CoffeeOut(BaseModel):
     net_weight: float
     price_per_weight: float
     data_source: str
+    data_fetched_ts: str
 
 @router.get("/coffees", response_model=list[CoffeeOut])
 def get_coffee_prices(db=Depends(get_db)):
@@ -36,7 +37,8 @@ def get_coffee_prices(db=Depends(get_db)):
             aa.net_weight, 
             bb.current_price / aa.net_weight as price_per_weight, 
             aa.tonno_data_source,
-            bb.fl_deal_price
+            bb.fl_deal_price,
+            CAST(aa.tonno_load_ts as varchar) as  data_fetched_ts
         FROM products_and_prices aa 
             left join get_correct_price bb 
                 on aa.id = bb.id 
@@ -45,4 +47,4 @@ def get_coffee_prices(db=Depends(get_db)):
     )
     rows = cursor.fetchall()
     cursor.close()
-    return [CoffeeOut(name_finnish=row[0], normal_price=row[1], net_weight=row[2], price_per_weight=row[3],data_source=row[4]) for row in rows]
+    return [CoffeeOut(name_finnish=row[0], normal_price=row[1], net_weight=row[2], price_per_weight=row[3],data_source=row[4],data_fetched_ts=row[6]) for row in rows]

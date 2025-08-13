@@ -130,6 +130,12 @@ const CoffeeTable = () => {
       >        
         <Text style={styles.headerText}>Source {getSortIcon('data_source')}</Text>
       </TouchableOpacity>
+      <TouchableOpacity 
+        style={styles.headerCell} 
+        onPress={() => handleSort('data_fetched_ts')}
+      >        
+        <Text style={styles.headerText}>Last update {getSortIcon('data_fetched_ts')}</Text>
+      </TouchableOpacity>
     </View>
   );
 
@@ -158,6 +164,9 @@ const CoffeeTable = () => {
       </View>
       <View style={styles.cell}>
         <Text style={styles.cellText}>{item.data_source}</Text>
+      </View>
+      <View style={styles.cell}>
+        <Text style={styles.cellText}>{item.data_fetched_ts}</Text>
       </View>
     </View>
   );
