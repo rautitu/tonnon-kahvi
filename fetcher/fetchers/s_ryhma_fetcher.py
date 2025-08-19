@@ -5,6 +5,7 @@ import cloudscraper
 import urllib.parse
 import logging
 import uuid
+import hashlib
 
 import psycopg2
 from psycopg2.extras import execute_values
@@ -155,30 +156,35 @@ class SRyhmaFetcher(BaseProductFetcher):
                 normal_price_unit, normal_price, batch_price,
                 batch_discount_pct, batch_discount_type, batch_days_left,
                 tonno_data_source, tonno_load_ts, tonno_end_ts,
-                encode(sha256(concat_ws(
-                    '||', 
-                    coalesce(id, 'null'), 
-                    coalesce(name_finnish, 'null'), 
-                    coalesce(name_english, 'null'), 
-                    coalesce(available_store, 'false'), 
-                    coalesce(available_web, 'false'),
-                    coalesce(net_weight, '0'), 
-                    coalesce(content_unit, 'null'), 
-                    coalesce(image_url, 'null'), 
-                    coalesce(brand_name, 'null'),
-                    coalesce(normal_price_unit, 'null'), 
-                    coalesce(normal_price, '0'), 
-                    coalesce(batch_price, '0'),
-                    coalesce(batch_discount_pct, '0'), 
-                    coalesce(batch_discount_type, 'null'), 
-                    coalesce(batch_days_left, '0')
-                )::bytea), 'hex') as tonno_row_hash
+                tonno_row_hash
             ) VALUES %s
             ON CONFLICT (id, tonno_load_ts) DO NOTHING
         """
 
-        records: list[tuple] = [
-            (
+        records: list[tuple] = []
+        for item in product_data:
+            # Calculate the hash for each row
+            hash_input = '||'.join([
+                str(item.get('id', 'null')),
+                str(item.get('name_finnish', 'null')),
+                str(item.get('name_english', 'null')),
+                str(item.get('available_store', 'false')),
+                str(item.get('available_web', 'false')),
+                str(item.get('net_weight', '0')),
+                str(item.get('content_unit', 'null')),
+                str(item.get('image_url', 'null')),
+                str(item.get('brand_name', 'null')),
+                str(item.get('normal_price_unit', 'null')),
+                str(item.get('normal_price', '0')),
+                str(item.get('batch_price', '0')),
+                str(item.get('batch_discount_pct', '0')),
+                str(item.get('batch_discount_type', 'null')),
+                str(item.get('batch_days_left', '0'))
+            ])
+            
+            row_hash = hashlib.sha256(hash_input.encode()).hexdigest()
+
+            records.append((
                 item['id'], item['name_finnish'], item['name_english'],
                 item['available_store'], item['available_web'],
                 item['net_weight'], item['content_unit'], item['image_url'],
@@ -187,10 +193,9 @@ class SRyhmaFetcher(BaseProductFetcher):
                 item['batch_discount_type'], item['batch_days_left'],
                 self._data_source,  # tonno_data_source (constant value)
                 datetime.datetime.now(),  # tonno_load_ts (current time)
-                None  # tonno_end_ts (NULL)
-            )
-            for item in product_data
-        ]
+                None,  # tonno_end_ts (NULL)
+                row_hash  # tonno_row_hash
+            ))
 
         with conn.cursor() as cur:
             execute_values(cur, insert_query, records)
