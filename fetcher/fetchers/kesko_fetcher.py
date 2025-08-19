@@ -140,10 +140,10 @@ class KRuokaFetcher(BaseProductFetcher):
                 batch_discount_pct, batch_discount_type, batch_days_left,
                 tonno_data_source, tonno_load_ts, tonno_end_ts,
                 encode(digest(concat_ws(
-                    '||', id, name_finnish, name_english, available_store, available_web,
-                    net_weight, content_unit, image_url, brand_name,
-                    normal_price_unit, normal_price, batch_price,
-                    batch_discount_pct, batch_discount_type, batch_days_left
+                    '||', coalesce(id, 'null'), coalesce(name_finnish, 'null'), coalesce(name_english, 'null'), coalesce(available_store, 'false'), coalesce(available_web, 'false'),
+                    coalesce(net_weight, '0'), coalesce(content_unit, 'null'), coalesce(image_url, 'null'), coalesce(brand_name, 'null'),
+                    coalesce(normal_price_unit, 'null'), coalesce(normal_price, '0'), coalesce(batch_price, '0'),
+                    coalesce(batch_discount_pct, '0'), coalesce(batch_discount_type, 'null'), coalesce(batch_days_left, '0')
                 ), 'sha256'), 'hex') as tonno_row_hash
             ) VALUES %s
             ON CONFLICT (id, tonno_load_ts) DO NOTHING
