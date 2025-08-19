@@ -216,6 +216,27 @@ class SRyhmaFetcher(BaseProductFetcher):
         update_ts = datetime.datetime.now()
         incoming_ids = tuple(item['id'] for item in product_data)
 
+        # Calculate row_hash for each item in Python
+        for item in product_data:
+            hash_input = '||'.join([
+                str(item.get('id', 'null')),
+                str(item.get('name_finnish', 'null')),
+                str(item.get('name_english', 'null')),
+                str(item.get('available_store', 'false')),
+                str(item.get('available_web', 'false')),
+                str(item.get('net_weight', '0')),
+                str(item.get('content_unit', 'null')),
+                str(item.get('image_url', 'null')),
+                str(item.get('brand_name', 'null')),
+                str(item.get('normal_price_unit', 'null')),
+                str(item.get('normal_price', '0')),
+                str(item.get('batch_price', '0')),
+                str(item.get('batch_discount_pct', '0')),
+                str(item.get('batch_discount_type', 'null')),
+                str(item.get('batch_days_left', '0'))
+            ])
+            item['tonno_row_hash'] = hashlib.sha256(hash_input.encode()).hexdigest()
+
         with conn.cursor() as cur:
             # Create a temp table to hold incoming rows + their row_hash
             cur.execute("""
@@ -239,7 +260,7 @@ class SRyhmaFetcher(BaseProductFetcher):
                 ) ON COMMIT DROP;
             """)
 
-            # Insert all incoming rows into the temp table, calculating row_hash here
+            # Insert all incoming rows into the temp table with pre-calculated row_hash
             insert_temp_query = """
                 INSERT INTO incoming_products (
                     id, name_finnish, name_english, available_store, available_web,
@@ -258,35 +279,11 @@ class SRyhmaFetcher(BaseProductFetcher):
                     item['brand_name'], item['normal_price_unit'], item['normal_price'],
                     item['batch_price'], item['batch_discount_pct'],
                     item['batch_discount_type'], item['batch_days_left'],
-                    # same expression you wrote earlier
-                    None  # placeholder, will be filled via UPDATE after load
+                    item['tonno_row_hash']  # Use the pre-calculated hash
                 )
                 for item in product_data
             ]
             execute_values(cur, insert_temp_query, records_for_temp)
-
-            # Update row_hash in temp table using Postgres digest function
-            cur.execute("""
-                UPDATE incoming_products
-                SET tonno_row_hash = encode(sha256(concat_ws(
-                    '||', 
-                    coalesce(id, 'null'), 
-                    coalesce(name_finnish, 'null'), 
-                    coalesce(name_english, 'null'), 
-                    coalesce(available_store, 'false'), 
-                    coalesce(available_web, 'false'),
-                    coalesce(net_weight, '0'), 
-                    coalesce(content_unit, 'null'), 
-                    coalesce(image_url, 'null'), 
-                    coalesce(brand_name, 'null'),
-                    coalesce(normal_price_unit, 'null'), 
-                    coalesce(normal_price, '0'), 
-                    coalesce(batch_price, '0'),
-                    coalesce(batch_discount_pct, '0'), 
-                    coalesce(batch_discount_type, 'null'), 
-                    coalesce(batch_days_left, '0')
-                )::bytea), 'hex');
-            """)
 
             # 1. Mark old versions as historical only where hash differs
             update_existing_query = """
