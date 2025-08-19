@@ -154,7 +154,13 @@ class SRyhmaFetcher(BaseProductFetcher):
                 net_weight, content_unit, image_url, brand_name,
                 normal_price_unit, normal_price, batch_price,
                 batch_discount_pct, batch_discount_type, batch_days_left,
-                tonno_data_source, tonno_load_ts, tonno_end_ts
+                tonno_data_source, tonno_load_ts, tonno_end_ts,
+                encode(digest(concat_ws(
+                    '||', id, name_finnish, name_english, available_store, available_web,
+                    net_weight, content_unit, image_url, brand_name,
+                    normal_price_unit, normal_price, batch_price,
+                    batch_discount_pct, batch_discount_type, batch_days_left
+                ), 'sha256'), 'hex') as tonno_row_hash
             ) VALUES %s
             ON CONFLICT (id, tonno_load_ts) DO NOTHING
         """
