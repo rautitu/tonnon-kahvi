@@ -155,12 +155,24 @@ class SRyhmaFetcher(BaseProductFetcher):
                 normal_price_unit, normal_price, batch_price,
                 batch_discount_pct, batch_discount_type, batch_days_left,
                 tonno_data_source, tonno_load_ts, tonno_end_ts,
-                encode(digest(concat_ws(
-                    '||', coalesce(id, 'null'), coalesce(name_finnish, 'null'), coalesce(name_english, 'null'), coalesce(available_store, 'false'), coalesce(available_web, 'false'),
-                    coalesce(net_weight, '0'), coalesce(content_unit, 'null'), coalesce(image_url, 'null'), coalesce(brand_name, 'null'),
-                    coalesce(normal_price_unit, 'null'), coalesce(normal_price, '0'), coalesce(batch_price, '0'),
-                    coalesce(batch_discount_pct, '0'), coalesce(batch_discount_type, 'null'), coalesce(batch_days_left, '0')
-                ), 'sha256'), 'hex') as tonno_row_hash
+                encode(sha256(concat_ws(
+                    '||', 
+                    coalesce(id, 'null'), 
+                    coalesce(name_finnish, 'null'), 
+                    coalesce(name_english, 'null'), 
+                    coalesce(available_store, 'false'), 
+                    coalesce(available_web, 'false'),
+                    coalesce(net_weight, '0'), 
+                    coalesce(content_unit, 'null'), 
+                    coalesce(image_url, 'null'), 
+                    coalesce(brand_name, 'null'),
+                    coalesce(normal_price_unit, 'null'), 
+                    coalesce(normal_price, '0'), 
+                    coalesce(batch_price, '0'),
+                    coalesce(batch_discount_pct, '0'), 
+                    coalesce(batch_discount_type, 'null'), 
+                    coalesce(batch_days_left, '0')
+                )::bytea), 'hex') as tonno_row_hash
             ) VALUES %s
             ON CONFLICT (id, tonno_load_ts) DO NOTHING
         """
@@ -251,14 +263,24 @@ class SRyhmaFetcher(BaseProductFetcher):
             # Update row_hash in temp table using Postgres digest function
             cur.execute("""
                 UPDATE incoming_products
-                SET tonno_row_hash = encode(digest(concat_ws(
-                    '||', coalesce(id, 'null'), coalesce(name_finnish, 'null'), coalesce(name_english, 'null'),
-                    coalesce(available_store::text, 'false'), coalesce(available_web::text, 'false'),
-                    coalesce(net_weight::text, '0'), coalesce(content_unit, 'null'), coalesce(image_url, 'null'),
-                    coalesce(brand_name, 'null'), coalesce(normal_price_unit, 'null'), coalesce(normal_price::text, '0'),
-                    coalesce(batch_price::text, '0'), coalesce(batch_discount_pct::text, '0'),
-                    coalesce(batch_discount_type, 'null'), coalesce(batch_days_left::text, '0')
-                ), 'sha256'), 'hex');
+                SET tonno_row_hash = encode(sha256(concat_ws(
+                    '||', 
+                    coalesce(id, 'null'), 
+                    coalesce(name_finnish, 'null'), 
+                    coalesce(name_english, 'null'), 
+                    coalesce(available_store, 'false'), 
+                    coalesce(available_web, 'false'),
+                    coalesce(net_weight, '0'), 
+                    coalesce(content_unit, 'null'), 
+                    coalesce(image_url, 'null'), 
+                    coalesce(brand_name, 'null'),
+                    coalesce(normal_price_unit, 'null'), 
+                    coalesce(normal_price, '0'), 
+                    coalesce(batch_price, '0'),
+                    coalesce(batch_discount_pct, '0'), 
+                    coalesce(batch_discount_type, 'null'), 
+                    coalesce(batch_days_left, '0')
+                )::bytea), 'hex');
             """)
 
             # 1. Mark old versions as historical only where hash differs
