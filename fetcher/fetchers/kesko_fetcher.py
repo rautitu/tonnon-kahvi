@@ -76,12 +76,20 @@ class KRuokaFetcher(BaseProductFetcher):
                             'normal_price_unit': normal.get('unit'),
                             'normal_price': normal.get('price')
                         })
+                    if 'discount' in pricing:
+                        discount = pricing['discount']
+                        extracted_item.update({
+                            'batch_price': discount.get('price'),
+                            'batch_discount_pct': discount.get('discountPercentage'),
+                            'batch_discount_type': discount.get('discountType'),  
+                            'batch_days_left': discount.get('validNumberOfDaysLeft')
+                        })
                     if 'batch' in pricing:
                         batch = pricing['batch']
                         extracted_item.update({
                             'batch_price': batch.get('price'),
                             'batch_discount_pct': batch.get('discountPercentage'),
-                            'batch_discount_type': batch.get('discountType'),  # Note: typo in original JSON?
+                            'batch_discount_type': batch.get('discountType'), 
                             'batch_days_left': batch.get('validNumberOfDaysLeft')
                         })
             
