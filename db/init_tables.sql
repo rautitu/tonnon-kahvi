@@ -1,3 +1,6 @@
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+
 CREATE TABLE products_and_prices (
     id TEXT, 
     name_finnish TEXT,
