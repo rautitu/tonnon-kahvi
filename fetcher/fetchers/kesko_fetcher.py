@@ -3,6 +3,7 @@ import requests
 import datetime
 import cloudscraper
 import logging
+import hashlib
 
 import psycopg2
 from psycopg2.extras import execute_values
@@ -138,13 +139,37 @@ class KRuokaFetcher(BaseProductFetcher):
                 net_weight, content_unit, image_url, brand_name,
                 normal_price_unit, normal_price, batch_price,
                 batch_discount_pct, batch_discount_type, batch_days_left,
-                tonno_data_source, tonno_load_ts, tonno_end_ts
+                tonno_data_source, tonno_load_ts, tonno_end_ts,
+                tonno_row_hash
             ) VALUES %s
             ON CONFLICT (id, tonno_load_ts) DO NOTHING
         """
 
-        records: list[tuple] = [
-            (
+        records: list[tuple] = []
+        for item in product_data:
+            # Calculate the hash for each row
+            hash_input = '||'.join([
+                str(item.get('id', 'null')),
+                str(item.get('name_finnish', 'null')),
+                str(item.get('name_english', 'null')),
+                str(item.get('available_store', 'false')),
+                str(item.get('available_web', 'false')),
+                str(item.get('net_weight', '0')),
+                str(item.get('content_unit', 'null')),
+                str(item.get('image_url', 'null')),
+                str(item.get('brand_name', 'null')),
+                str(item.get('normal_price_unit', 'null')),
+                str(item.get('normal_price', '0')),
+                str(item.get('batch_price', '0')),
+                str(item.get('batch_discount_pct', '0')),
+                str(item.get('batch_discount_type', 'null')),
+                str(item.get('batch_days_left', '0'))
+            ])
+            
+            # Calculate SHA256 hash in Python
+            row_hash = hashlib.sha256(hash_input.encode()).hexdigest()
+
+            records.append((
                 item['id'], item['name_finnish'], item['name_english'],
                 item['available_store'], item['available_web'],
                 item['net_weight'], item['content_unit'], item['image_url'],
@@ -153,10 +178,9 @@ class KRuokaFetcher(BaseProductFetcher):
                 item['batch_discount_type'], item['batch_days_left'],
                 self._data_source,  # tonno_data_source (constant value)
                 datetime.datetime.now(),  # tonno_load_ts (current time)
-                None  # tonno_end_ts (NULL)
-            )
-            for item in product_data
-        ]
+                None,  # tonno_end_ts (NULL)
+                row_hash  # tonno_row_hash
+            ))
 
         with conn.cursor() as cur:
             execute_values(cur, insert_query, records)
@@ -166,10 +190,10 @@ class KRuokaFetcher(BaseProductFetcher):
     
     def _update_prices(self, conn, product_data: list[dict]) -> str:
         """
-        Updates product data in the target table using a slowly changing dimension approach.
-        1. Marks existing rows that are present in the new data as historical.
-        2. Marks rows that are no longer in the source data as historical.
-        3. Inserts all incoming data as new, current rows.
+        Updates product data in the target table using a slowly changing dimension + row_hash.
+        1. Marks existing rows as historical only if the incoming row differs (row_hash mismatch).
+        2. Marks rows no longer present in the source as historical.
+        3. Inserts incoming rows as new current rows (only those with changed hash or new ids).
         """
         if not product_data:
             return "No product data from source, no updates performed."
@@ -177,50 +201,62 @@ class KRuokaFetcher(BaseProductFetcher):
         update_ts = datetime.datetime.now()
         incoming_ids = tuple(item['id'] for item in product_data)
 
+        # Calculate row_hash for each item in Python
+        for item in product_data:
+            hash_input = '||'.join([
+                str(item.get('id', 'null')),
+                str(item.get('name_finnish', 'null')),
+                str(item.get('name_english', 'null')),
+                str(item.get('available_store', 'false')),
+                str(item.get('available_web', 'false')),
+                str(item.get('net_weight', '0')),
+                str(item.get('content_unit', 'null')),
+                str(item.get('image_url', 'null')),
+                str(item.get('brand_name', 'null')),
+                str(item.get('normal_price_unit', 'null')),
+                str(item.get('normal_price', '0')),
+                str(item.get('batch_price', '0')),
+                str(item.get('batch_discount_pct', '0')),
+                str(item.get('batch_discount_type', 'null')),
+                str(item.get('batch_days_left', '0'))
+            ])
+            item['tonno_row_hash'] = hashlib.sha256(hash_input.encode()).hexdigest()
+
         with conn.cursor() as cur:
-            # 1. Update existing rows that are also in the incoming data.
-            # These are products whose prices/details may have changed.
-            # We mark the old version as historical.
-            update_existing_query = """
-                UPDATE products_and_prices
-                SET tonno_end_ts = %s
-                WHERE 
-                    id = ANY(%s) AND 
-                    tonno_end_ts IS NULL AND
-                    tonno_data_source = %s
-                ;
-            """
-            cur.execute(update_existing_query, (update_ts, list(incoming_ids), self._data_source))
-            updated_count = cur.rowcount
+            # Create a temp table to hold incoming rows + their row_hash
+            cur.execute("""
+                CREATE TEMP TABLE incoming_products (
+                    id TEXT,
+                    name_finnish TEXT,
+                    name_english TEXT,
+                    available_store BOOLEAN,
+                    available_web BOOLEAN,
+                    net_weight NUMERIC,
+                    content_unit TEXT,
+                    image_url TEXT,
+                    brand_name TEXT,
+                    normal_price_unit TEXT,
+                    normal_price NUMERIC,
+                    batch_price NUMERIC,
+                    batch_discount_pct NUMERIC,
+                    batch_discount_type TEXT,
+                    batch_days_left INT,
+                    tonno_row_hash TEXT
+                ) ON COMMIT DROP;
+            """)
 
-            # 2. Mark products that have disappeared from the source as historical.
-            # These are products that exist in our DB but not in the new data feed.
-            update_disappeared_query = """
-                UPDATE products_and_prices
-                SET tonno_end_ts = %s
-                WHERE 
-                    id NOT IN %s AND
-                    tonno_end_ts IS NULL AND
-                    tonno_data_source = %s
-                ;
-            """
-            cur.execute(update_disappeared_query, (update_ts, incoming_ids, self._data_source))
-            disappeared_count = cur.rowcount
-
-            # 3. Insert all incoming products as the new "current" rows.
-            # This covers brand new products and new versions of existing products.
-            # Note: No "ON CONFLICT" clause, as we always want to insert a new version.
-            insert_query = """
-                INSERT INTO products_and_prices (
+            # Insert all incoming rows into the temp table with pre-calculated row_hash
+            insert_temp_query = """
+                INSERT INTO incoming_products (
                     id, name_finnish, name_english, available_store, available_web,
                     net_weight, content_unit, image_url, brand_name,
                     normal_price_unit, normal_price, batch_price,
                     batch_discount_pct, batch_discount_type, batch_days_left,
-                    tonno_data_source, tonno_load_ts, tonno_end_ts
-                ) VALUES %s
+                    tonno_row_hash
+                )
+                VALUES %s
             """
-            
-            records_to_insert: list[tuple] = [
+            records_for_temp = [
                 (
                     item['id'], item['name_finnish'], item['name_english'],
                     item['available_store'], item['available_web'],
@@ -228,21 +264,69 @@ class KRuokaFetcher(BaseProductFetcher):
                     item['brand_name'], item['normal_price_unit'], item['normal_price'],
                     item['batch_price'], item['batch_discount_pct'],
                     item['batch_discount_type'], item['batch_days_left'],
-                    self._data_source,      # tonno_data_source
-                    update_ts,      # tonno_load_ts (use the consistent timestamp)
-                    None            # tonno_end_ts (NULL for current version)
+                    item['tonno_row_hash']  # Use the pre-calculated hash
                 )
                 for item in product_data
             ]
-            
-            execute_values(cur, insert_query, records_to_insert)
-            inserted_count = len(records_to_insert)
+            execute_values(cur, insert_temp_query, records_for_temp)
+
+            # 1. Mark old versions as historical only where hash differs
+            update_existing_query = """
+                UPDATE products_and_prices p
+                SET tonno_end_ts = %s
+                FROM incoming_products i
+                WHERE 
+                    p.id = i.id
+                    AND p.tonno_end_ts IS NULL
+                    AND p.tonno_data_source = %s
+                    AND p.tonno_row_hash IS DISTINCT FROM i.tonno_row_hash;
+            """
+            cur.execute(update_existing_query, (update_ts, self._data_source))
+            updated_count = cur.rowcount
+
+            # 2. Mark disappeared products as historical
+            update_disappeared_query = """
+                UPDATE products_and_prices
+                SET tonno_end_ts = %s
+                WHERE 
+                    id NOT IN %s AND
+                    tonno_end_ts IS NULL AND
+                    tonno_data_source = %s;
+            """
+            cur.execute(update_disappeared_query, (update_ts, incoming_ids, self._data_source))
+            disappeared_count = cur.rowcount
+
+            # 3. Insert only changed or new rows
+            insert_query = """
+                INSERT INTO products_and_prices (
+                    id, name_finnish, name_english, available_store, available_web,
+                    net_weight, content_unit, image_url, brand_name,
+                    normal_price_unit, normal_price, batch_price,
+                    batch_discount_pct, batch_discount_type, batch_days_left,
+                    tonno_data_source, tonno_load_ts, tonno_end_ts, tonno_row_hash
+                )
+                SELECT
+                    i.id, i.name_finnish, i.name_english, i.available_store, i.available_web,
+                    i.net_weight, i.content_unit, i.image_url, i.brand_name,
+                    i.normal_price_unit, i.normal_price, i.batch_price,
+                    i.batch_discount_pct, i.batch_discount_type, i.batch_days_left,
+                    %s, %s, NULL, i.tonno_row_hash
+                FROM incoming_products i
+                LEFT JOIN products_and_prices p
+                ON p.id = i.id
+                AND p.tonno_end_ts IS NULL
+                AND p.tonno_data_source = %s
+                WHERE p.id IS NULL OR p.tonno_row_hash IS DISTINCT FROM i.tonno_row_hash;
+            """
+            cur.execute(insert_query, (self._data_source, update_ts, self._data_source))
+            inserted_count = cur.rowcount
 
         conn.commit()
 
         return (f"Price update complete. Inserted: {inserted_count}, "
                 f"Updated (new version): {updated_count}, "
                 f"Disappeared: {disappeared_count}.")
+
     
     def init_fetch_and_insert(self):
         """Performs both fetch + insert operations, returns some description string of the operation end result from insert"""

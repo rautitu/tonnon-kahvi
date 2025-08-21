@@ -1,3 +1,6 @@
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+
 CREATE TABLE products_and_prices (
     id TEXT, 
     name_finnish TEXT,
@@ -17,6 +20,7 @@ CREATE TABLE products_and_prices (
     tonno_data_source TEXT,
     tonno_load_ts TIMESTAMP, 
     tonno_end_ts TIMESTAMP,
+    tonno_row_hash TEXT
 
     PRIMARY KEY (id, tonno_load_ts)
 );
