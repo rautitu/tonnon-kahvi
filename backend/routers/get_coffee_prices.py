@@ -11,6 +11,7 @@ class CoffeeOut(BaseModel):
     net_weight: float
     price_per_weight: float
     data_source: str
+    fl_deal_price: int
     data_fetched_ts: str
 
 @router.get("/coffees", response_model=list[CoffeeOut])
@@ -47,4 +48,4 @@ def get_coffee_prices(db=Depends(get_db)):
     )
     rows = cursor.fetchall()
     cursor.close()
-    return [CoffeeOut(name_finnish=row[0], normal_price=row[1], net_weight=row[2], price_per_weight=row[3],data_source=row[4],data_fetched_ts=row[6]) for row in rows]
+    return [CoffeeOut(name_finnish=row[0], normal_price=row[1], net_weight=row[2], price_per_weight=row[3],data_source=row[4],fl_deal_price=row[5],data_fetched_ts=row[6]) for row in rows]

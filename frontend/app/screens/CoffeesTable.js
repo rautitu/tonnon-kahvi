@@ -140,19 +140,22 @@ const CoffeeTable = () => {
   );
 
   const renderRow = ({ item }) => (
-    <View style={styles.row}>
+    <View
+      style={[
+        styles.row,
+        item.fl_deal_price === 1 && { backgroundColor: '#d9fdd3' } // light green
+      ]}
+    >
       <View style={styles.cell}>
         <Text style={styles.cellText}>{item.name_finnish}</Text>
       </View>
       
-      {/* Hide Price cell on mobile */}
       {!isMobile && (
         <View style={styles.cell}>
           <Text style={styles.cellText}>{item.normal_price.toFixed(2)} €</Text>
         </View>
       )}
       
-      {/* Hide Weight cell on mobile */}
       {!isMobile && (
         <View style={styles.cell}>
           <Text style={styles.cellText}>{item.net_weight.toFixed(2)} kg</Text>
