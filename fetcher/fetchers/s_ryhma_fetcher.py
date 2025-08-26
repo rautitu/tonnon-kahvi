@@ -65,7 +65,7 @@ class SRyhmaFetcher(BaseProductFetcher):
                 'brand_name': item.get('brandName'),
                 'normal_price_unit': item.get('pricing', {}).get('comparisonUnit'),
                 'normal_price': item.get('pricing', {}).get('regularPrice'),
-                'batch_price': item.get('pricing', {}).get('currentPrice'),
+                'batch_price': item.get('pricing', {}).get('campaignPrice'),
                 'batch_discount_pct': None,
                 'batch_discount_type': None,
                 'batch_days_left': None
