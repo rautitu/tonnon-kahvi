@@ -44,7 +44,8 @@ def get_coffee_prices(db=Depends(get_db)):
             left join get_correct_price bb 
                 on aa.id = bb.id 
         WHERE aa.tonno_end_ts IS NULL
-            AND NOT LOWER(aa.name_finnish) like '%suodatinpussi%'
+            AND NOT LOWER(aa.name_finnish) LIKE '%suodatinpussi%'
+            AND NOT LOWER(aa.name_finnish) LIKE '%kahvinsuodatin%'
     """
     )
     rows = cursor.fetchall()
