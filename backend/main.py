@@ -36,7 +36,7 @@ app.add_middleware(
 
 @app.get("/")
 def root():
-    return {"message": "Hello, welcome to tonnon-kahvi version 0.1!"}
+    return {"message": "Hello, welcome to tonnon-kahvi!"}
 
 @app.get("/endpoints")
 def get_all_endpoints():
