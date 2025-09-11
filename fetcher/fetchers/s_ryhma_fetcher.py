@@ -88,7 +88,7 @@ class SRyhmaFetcher(BaseProductFetcher):
             "generatedSessionId": str(uuid.uuid4()),
             "includeAgeLimitedByAlcohol": True,
             "limit": 24,
-            "queryString": "suodatinkahvi",
+            "queryString": "suodatinkahvi OR suodatinjauhatus",
             "storeId": "726308750",
             "useRandomId": False
         }
