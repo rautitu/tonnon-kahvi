@@ -1,3 +1,5 @@
+//this is the default index.tsx from expo router
+//saving it just in case - replaced it with a rerouter to Home.js for now
 import { Image } from 'expo-image';
 import { Platform, StyleSheet } from 'react-native';
 
