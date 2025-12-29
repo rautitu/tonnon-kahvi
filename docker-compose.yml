@@ -55,7 +55,8 @@ services:
       - ./db/init_tables.sql:/docker-entrypoint-initdb.d/init.sql:ro
 
   caddy:
-    image: caddy:alpine
+    build:
+      context: ./caddy
     restart: unless-stopped
     ports:
       - "80:80"
@@ -69,6 +70,7 @@ services:
     depends_on:
       - frontend
       - backend
+
 
 volumes:
   db_data:
