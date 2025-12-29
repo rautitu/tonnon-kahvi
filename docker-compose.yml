@@ -33,19 +33,14 @@ services:
       dockerfile: frontend/Dockerfile
     expose:
       - "19006"
-    ports:
-      - "49100:19000"  # Expo dev tools
-      - "49101:19001"  # Packager
-      - "49102:19002"  # Expo dev server
-      #- "49106:19006"  # Web interface
     volumes:
       - ./frontend:/app
-      - /app/node_modules  # Prevent host node_modules from overwriting container's
+      - /app/node_modules
     stdin_open: true
     tty: true
     environment:
-      - WEB_HOST=0.0.0.0
-      - BACKEND_URL=https://tonnopannu.duckdns.org/api 
+      WEB_HOST: 0.0.0.0
+      BACKEND_URL: https://tonnopannu.duckdns.org/api
     restart: unless-stopped
 
   db:
@@ -55,18 +50,18 @@ services:
       POSTGRES_USER: coffee
       POSTGRES_PASSWORD: coffee123
       POSTGRES_DB: coffee_prices
-    ports:
-      - "5432:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
       - ./db/init_tables.sql:/docker-entrypoint-initdb.d/init.sql:ro
-  
+
   caddy:
     image: caddy:alpine
     restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
+    environment:
+      DUCKDNS_TOKEN: ${DUCKDNS_TOKEN}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
