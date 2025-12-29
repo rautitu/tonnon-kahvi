@@ -1,8 +1,9 @@
 {
-  acme_dns duckdns {env.DUCKDNS_TOKEN}
-
-  # Force reliable public resolvers (fixes SERVFAIL that relates to DuckDNS as it is not "normal DNS service")
-  resolvers 1.1.1.1 8.8.8.8
+  tls {
+    dns duckdns {env.DUCKDNS_TOKEN}
+    # Force reliable public resolvers (fixes SERVFAIL that relates to DuckDNS as it is not "normal DNS service")
+    resolvers 1.1.1.1 8.8.8.8
+  }
 }
 
 tonnopannu.duckdns.org {
@@ -14,3 +15,4 @@ tonnopannu.duckdns.org {
         reverse_proxy frontend:19006
     }
 }
+
