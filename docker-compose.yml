@@ -18,7 +18,7 @@ services:
       dockerfile: backend/Dockerfile
     depends_on:
       - db
-    ports:
+    expose:
       - "8000"
     environment:
       DB_HOST: db
