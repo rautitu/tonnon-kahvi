@@ -1,11 +1,10 @@
-{
-  tls {
-    dns duckdns {env.DUCKDNS_TOKEN}
-    resolvers 1.1.1.1 8.8.8.8
-  }
-}
-
 tonnopannu.duckdns.org {
+
+    tls {
+        dns duckdns {env.DUCKDNS_TOKEN}
+        resolvers 1.1.1.1 8.8.8.8
+    }
+
     handle_path /api/* {
         reverse_proxy backend:8000
     }
@@ -14,4 +13,3 @@ tonnopannu.duckdns.org {
         reverse_proxy frontend:19006
     }
 }
-
