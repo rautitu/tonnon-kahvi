@@ -1,0 +1,11 @@
+tonnopannu.duckdns.org {
+    #routing API calls to backend
+    handle_path /api/* {
+        reverse_proxy backend:8000
+    }
+    
+    #routing everything else to frontend
+    handle {
+        reverse_proxy frontend:19006
+    }
+}

@@ -19,7 +19,7 @@ services:
     depends_on:
       - db
     ports:
-      - "8000:8000"
+      - "8000"
     environment:
       DB_HOST: db
       DB_USER: coffee
@@ -31,11 +31,13 @@ services:
     build:
       context: .
       dockerfile: frontend/Dockerfile
+    expose:
+      - "19006"
     ports:
       - "49100:19000"  # Expo dev tools
       - "49101:19001"  # Packager
       - "49102:19002"  # Expo dev server
-      - "49106:19006"  # Web interface
+      #- "49106:19006"  # Web interface
     volumes:
       - ./frontend:/app
       - /app/node_modules  # Prevent host node_modules from overwriting container's
@@ -43,6 +45,7 @@ services:
     tty: true
     environment:
       - WEB_HOST=0.0.0.0
+      - BACKEND_URL=https://tonnopannu.duckdns.org/api 
     restart: unless-stopped
 
   db:
@@ -57,6 +60,23 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
       - ./db/init_tables.sql:/docker-entrypoint-initdb.d/init.sql:ro
+  
+  caddy:
+    image: caddy:alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "49106:19006"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - frontend
+      - backend
 
 volumes:
   db_data:
+  caddy_data:
+  caddy_config:
