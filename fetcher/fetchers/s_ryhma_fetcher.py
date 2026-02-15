@@ -1,10 +1,9 @@
 import json
+import os
 import requests
 import datetime
 import cloudscraper
-import urllib.parse
 import logging
-import uuid
 import hashlib
 
 import psycopg2
@@ -22,6 +21,14 @@ logger = logging.getLogger("s-ryhma-fetcher")
 
 
 class SRyhmaFetcher(BaseProductFetcher):
+    """
+    Fetcher for S-ryhmä (S-kaupat) product data.
+    
+    Requires the S_KAUPAT_STORE_ID environment variable to be set.
+    This is the numeric store ID used by the S-kaupat GraphQL API to scope product searches.
+    Store IDs can be found on s-kaupat.fi store pages or via their searchStores API.
+    Note: S-kaupat may rotate store IDs periodically — update the env var if fetches start failing.
+    """
     category: str = 'suodatinkahvi'
     _data_source: str = 'S-ryhma'
 
@@ -75,29 +82,20 @@ class SRyhmaFetcher(BaseProductFetcher):
         
         return extracted_data
 
+    def _get_store_id(self) -> str:
+        """Returns the S-kaupat store ID from the S_KAUPAT_STORE_ID environment variable."""
+        store_id = os.environ.get('S_KAUPAT_STORE_ID')
+        if not store_id:
+            raise ValueError(
+                "S_KAUPAT_STORE_ID environment variable is not set. "
+                "Set it to the desired S-kaupat store ID (e.g. '513971200' for Prisma Kaari Kannelmäki)."
+            )
+        logger.info(f"Using S-kaupat store ID: {store_id}")
+        return store_id
+
     def _fetch_prices(self):
         base_url = "https://api.s-kaupat.fi/"
-        variables_template = {
-            "includeStoreEdgePricing": True,
-            "storeEdgeId": "513971200",
-            "facets": [
-                {"key": "brandName", "order": "asc"},
-                {"key": "category"},
-                {"key": "labels"}
-            ],
-            "generatedSessionId": str(uuid.uuid4()),
-            "includeAgeLimitedByAlcohol": True,
-            "limit": 24,
-            "queryString": "suodatinkahvi OR suodatinjauhatus",
-            "storeId": "726308750",
-            "useRandomId": False
-        }
-        extensions = {
-            "persistedQuery": {
-                "version": 1,
-                "sha256Hash": "abbeaf3143217630082d1c0ba36033999b196679bff4b310a0418e290c141426"
-            }
-        }
+        store_id = self._get_store_id()
 
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0',
@@ -105,23 +103,55 @@ class SRyhmaFetcher(BaseProductFetcher):
             'Content-Type': 'application/json',
             'Origin': 'https://www.s-kaupat.fi',
             'x-client-name': 'skaupat-web',
-            'x-client-version': 'production-e14c351ce120b6fca5d16451b7a06bae74b4b0f2'
         }
+
+        graphql_query = """
+            query RemoteFilteredProducts(
+                $storeId: ID!,
+                $queryString: String,
+                $limit: Int,
+                $from: Int
+            ) {
+                store(id: $storeId) {
+                    products(queryString: $queryString, limit: $limit, from: $from) {
+                        total
+                        items {
+                            id
+                            name
+                            price
+                            comparisonPrice
+                            comparisonUnit
+                            brandName
+                            pricing {
+                                regularPrice
+                                campaignPrice
+                                comparisonUnit
+                            }
+                        }
+                    }
+                }
+            }
+        """
 
         all_data = []
         offset = 0
-        limit = variables_template["limit"]
+        limit = 24
 
         scraper = cloudscraper.create_scraper()
 
         while True:
-            variables_template["from"] = offset
-            variables_str = urllib.parse.quote(json.dumps(variables_template))
-            extensions_str = urllib.parse.quote(json.dumps(extensions))
+            payload = {
+                "operationName": "RemoteFilteredProducts",
+                "variables": {
+                    "storeId": store_id,
+                    "queryString": "suodatinkahvi OR suodatinjauhatus",
+                    "limit": limit,
+                    "from": offset
+                },
+                "query": graphql_query
+            }
 
-            url = f"{base_url}?operationName=RemoteFilteredProducts&variables={variables_str}&extensions={extensions_str}"
-
-            response = scraper.get(url, headers=headers)
+            response = scraper.post(base_url, headers=headers, json=payload)
             print(f"API call (offset={offset}) response code: {response.status_code}")
 
             if response.status_code != 200:

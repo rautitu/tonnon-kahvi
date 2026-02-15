@@ -10,6 +10,7 @@ services:
       DB_USER: coffee
       DB_PASSWORD: coffee123
       DB_NAME: coffee_prices
+      S_KAUPAT_STORE_ID: "513971200"  # Prisma Kaari Kannelmäki — find IDs via s-kaupat.fi store pages
     restart: unless-stopped
 
   backend:
