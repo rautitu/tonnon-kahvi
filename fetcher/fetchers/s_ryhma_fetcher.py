@@ -21,6 +21,14 @@ logger = logging.getLogger("s-ryhma-fetcher")
 
 
 class SRyhmaFetcher(BaseProductFetcher):
+    """
+    Fetcher for S-ryhmä (S-kaupat) product data.
+    
+    Requires the S_KAUPAT_STORE_ID environment variable to be set.
+    This is the numeric store ID used by the S-kaupat GraphQL API to scope product searches.
+    Store IDs can be found on s-kaupat.fi store pages or via their searchStores API.
+    Note: S-kaupat may rotate store IDs periodically — update the env var if fetches start failing.
+    """
     category: str = 'suodatinkahvi'
     _data_source: str = 'S-ryhma'
 
