@@ -9,7 +9,7 @@ from curl_cffi import requests as cffi_requests
 import psycopg2
 from psycopg2.extras import execute_values
 
-from fetcher.base_fetcher import BaseProductFetcher
+from fetcher.base_fetcher import BaseProductFetcher, FetchResponseValidationError
 
 # Configure logging to stdout (Docker captures this)
 logging.basicConfig(
@@ -51,6 +51,66 @@ class SRyhmaFetcher(BaseProductFetcher):
             count = cur.fetchone()[0]
         
         return count > 0
+
+    def validate_fetch_response(self, response) -> dict:
+        """
+        Validates S-kaupat GraphQL API response.
+        
+        Checks:
+        - HTTP 200 status
+        - Response is valid JSON (not a Cloudflare challenge HTML page)
+        - No GraphQL errors in response
+        - Response contains expected nested structure: data.store.products.items
+        
+        Returns:
+            dict: Parsed JSON response data.
+            
+        Raises:
+            FetchResponseValidationError: If any validation check fails.
+        """
+        if response.status_code != 200:
+            raise FetchResponseValidationError(
+                f"S-kaupat API returned HTTP {response.status_code}"
+            )
+
+        try:
+            data = response.json()
+        except (ValueError, TypeError) as e:
+            snippet = response.text[:200] if response.text else "(empty)"
+            raise FetchResponseValidationError(
+                f"S-kaupat API response is not valid JSON (possible Cloudflare challenge). "
+                f"Response snippet: {snippet}"
+            ) from e
+
+        if 'errors' in data:
+            raise FetchResponseValidationError(
+                f"S-kaupat GraphQL returned errors: {data['errors']}"
+            )
+
+        # Validate nested structure: data -> store -> products -> items
+        if 'data' not in data:
+            raise FetchResponseValidationError(
+                f"S-kaupat API response missing 'data' key. Keys present: {list(data.keys())}"
+            )
+
+        store = data.get('data', {}).get('store')
+        if store is None:
+            raise FetchResponseValidationError(
+                "S-kaupat API response missing 'data.store' — store ID may be invalid"
+            )
+
+        products = store.get('products')
+        if products is None:
+            raise FetchResponseValidationError(
+                "S-kaupat API response missing 'data.store.products'"
+            )
+
+        if 'items' not in products or not isinstance(products['items'], list):
+            raise FetchResponseValidationError(
+                f"S-kaupat API response missing or invalid 'items'. Keys present: {list(products.keys())}"
+            )
+
+        return data
 
     def _extract_product_data(self, json_data: dict):
         extracted_data: list = []
@@ -157,13 +217,9 @@ class SRyhmaFetcher(BaseProductFetcher):
 
                 # Using curl_cffi with Firefox TLS fingerprint impersonation to bypass Cloudflare
                 response = cffi_requests.post(base_url, headers=headers, json=payload, impersonate="firefox")
-                print(f"API call (term='{term}', offset={offset}) response code: {response.status_code}")
+                logger.info(f"API call (term='{term}', offset={offset}) response code: {response.status_code}")
 
-                if response.status_code != 200:
-                    logger.exception(f"Failed to fetch S-ryhma data, status: {response.status_code}, full response: {response.text}")
-                    break
-
-                json_data = response.json()
+                json_data = self.validate_fetch_response(response)
                 product_data = self._extract_product_data(json_data)
 
                 # Deduplicate across search terms

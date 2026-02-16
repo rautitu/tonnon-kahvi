@@ -8,7 +8,7 @@ from curl_cffi import requests as cffi_requests
 import psycopg2
 from psycopg2.extras import execute_values
 
-from fetcher.base_fetcher import BaseProductFetcher
+from fetcher.base_fetcher import BaseProductFetcher, FetchResponseValidationError
 
 # Configure logging to stdout (Docker captures this)
 logging.basicConfig(
@@ -41,6 +41,58 @@ class KRuokaFetcher(BaseProductFetcher):
             count = cur.fetchone()[0]
         
         return count > 0
+
+    def validate_fetch_response(self, response) -> dict:
+        """
+        Validates K-ruoka API response.
+        
+        Checks:
+        - HTTP 200 status
+        - Response is valid JSON (not a Cloudflare challenge HTML page)
+        - Response contains 'result' key with a non-empty list
+        - Response contains 'totalHits' for sanity checking
+        
+        Returns:
+            dict: Parsed JSON response data.
+            
+        Raises:
+            FetchResponseValidationError: If any validation check fails.
+        """
+        if response.status_code != 200:
+            raise FetchResponseValidationError(
+                f"K-Ruoka API returned HTTP {response.status_code}"
+            )
+
+        try:
+            data = response.json()
+        except (ValueError, TypeError) as e:
+            # Response is not JSON — likely a Cloudflare challenge page
+            snippet = response.text[:200] if response.text else "(empty)"
+            raise FetchResponseValidationError(
+                f"K-Ruoka API response is not valid JSON (possible Cloudflare challenge). "
+                f"Response snippet: {snippet}"
+            ) from e
+
+        if 'result' not in data:
+            raise FetchResponseValidationError(
+                f"K-Ruoka API response missing 'result' key. Keys present: {list(data.keys())}"
+            )
+
+        if not isinstance(data['result'], list):
+            raise FetchResponseValidationError(
+                f"K-Ruoka API 'result' is not a list, got: {type(data['result']).__name__}"
+            )
+
+        if len(data['result']) == 0:
+            logger.warning("K-Ruoka API returned 0 products — this may indicate an issue with the API or store ID")
+
+        total_hits = data.get('totalHits')
+        if total_hits is not None and total_hits != len(data['result']):
+            logger.warning(
+                f"K-Ruoka API totalHits ({total_hits}) differs from result count ({len(data['result'])})"
+            )
+
+        return data
 
     def _extract_product_data(self, json_data: dict):
         extracted_data: list = []
@@ -120,12 +172,10 @@ class KRuokaFetcher(BaseProductFetcher):
 
         logger.info(f"K-Ruoka API response code: {response.status_code}")
 
-        if response.status_code == 200:
-            logger.info("Successfully queried K-Ruoka API")
-            parsed_response: list = self._extract_product_data(response.json())
-            return parsed_response
-        else:
-            logger.exception(f"Failed to fetch data from K-Ruoka API, API response code: {response.status_code}, full response: {response.text}")
+        validated_data = self.validate_fetch_response(response)
+        logger.info(f"Successfully queried K-Ruoka API, {len(validated_data['result'])} products")
+        parsed_response: list = self._extract_product_data(validated_data)
+        return parsed_response
 
     def _insert_init_prices(self, conn, product_data: list[dict]) -> str:
         "Initial insert product data into products_and_prices table"
