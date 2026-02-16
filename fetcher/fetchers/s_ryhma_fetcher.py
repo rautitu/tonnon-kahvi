@@ -1,10 +1,10 @@
 import json
 import os
-import requests
 import datetime
-import cloudscraper
 import logging
 import hashlib
+
+from curl_cffi import requests as cffi_requests
 
 import psycopg2
 from psycopg2.extras import execute_values
@@ -133,44 +133,55 @@ class SRyhmaFetcher(BaseProductFetcher):
             }
         """
 
+        # The inline GraphQL API does not support OR syntax in queryString,
+        # so we search each term separately and deduplicate by product ID.
+        search_terms = ["suodatinkahvi", "suodatinjauhatus"]
+        seen_ids = set()
         all_data = []
-        offset = 0
-        limit = 24
 
-        scraper = cloudscraper.create_scraper()
+        for term in search_terms:
+            offset = 0
+            limit = 24
 
-        while True:
-            payload = {
-                "operationName": "RemoteFilteredProducts",
-                "variables": {
-                    "storeId": store_id,
-                    "queryString": "suodatinkahvi OR suodatinjauhatus",
-                    "limit": limit,
-                    "from": offset
-                },
-                "query": graphql_query
-            }
+            while True:
+                payload = {
+                    "operationName": "RemoteFilteredProducts",
+                    "variables": {
+                        "storeId": store_id,
+                        "queryString": term,
+                        "limit": limit,
+                        "from": offset
+                    },
+                    "query": graphql_query
+                }
 
-            response = scraper.post(base_url, headers=headers, json=payload)
-            print(f"API call (offset={offset}) response code: {response.status_code}")
+                # Using curl_cffi with Firefox TLS fingerprint impersonation to bypass Cloudflare
+                response = cffi_requests.post(base_url, headers=headers, json=payload, impersonate="firefox")
+                print(f"API call (term='{term}', offset={offset}) response code: {response.status_code}")
 
-            if response.status_code != 200:
-                logger.exception(f"Failed to fetch S-ryhma data, status: {response.status_code}, full response: {response.text}")
+                if response.status_code != 200:
+                    logger.exception(f"Failed to fetch S-ryhma data, status: {response.status_code}, full response: {response.text}")
+                    break
 
-            json_data = response.json()
-            product_data = self._extract_product_data(json_data)
-            all_data.extend(product_data)
+                json_data = response.json()
+                product_data = self._extract_product_data(json_data)
 
-            # Pagination check
-            product_info = json_data["data"]["store"]["products"]
-            total = product_info["total"]
-            received = len(product_info["items"])
-            offset += received
+                # Deduplicate across search terms
+                for product in product_data:
+                    if product['id'] not in seen_ids:
+                        seen_ids.add(product['id'])
+                        all_data.append(product)
 
-            logger.info(f"S-Ryhma API, fetched {received} products, total so far: {len(all_data)}")
+                # Pagination check
+                product_info = json_data["data"]["store"]["products"]
+                total = product_info["total"]
+                received = len(product_info["items"])
+                offset += received
 
-            if offset >= total:
-                break
+                logger.info(f"S-Ryhma API [{term}], fetched {received} products, unique so far: {len(all_data)}")
+
+                if offset >= total:
+                    break
 
         return all_data
 

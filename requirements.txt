@@ -1,5 +1,4 @@
 requests
-cloudscraper
 curl-cffi
 psycopg2
 fastapi
