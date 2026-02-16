@@ -1,16 +1,15 @@
 import json
-import requests
+import os
 import datetime
-import cloudscraper
-import urllib.parse
 import logging
-import uuid
 import hashlib
+
+from curl_cffi import requests as cffi_requests
 
 import psycopg2
 from psycopg2.extras import execute_values
 
-from fetcher.base_fetcher import BaseProductFetcher
+from fetcher.base_fetcher import BaseProductFetcher, FetchResponseValidationError
 
 # Configure logging to stdout (Docker captures this)
 logging.basicConfig(
@@ -22,6 +21,14 @@ logger = logging.getLogger("s-ryhma-fetcher")
 
 
 class SRyhmaFetcher(BaseProductFetcher):
+    """
+    Fetcher for S-ryhmä (S-kaupat) product data.
+    
+    Requires the S_KAUPAT_STORE_ID environment variable to be set.
+    This is the numeric store ID used by the S-kaupat GraphQL API to scope product searches.
+    Store IDs can be found on s-kaupat.fi store pages or via their searchStores API.
+    Note: S-kaupat may rotate store IDs periodically — update the env var if fetches start failing.
+    """
     category: str = 'suodatinkahvi'
     _data_source: str = 'S-ryhma'
 
@@ -44,6 +51,66 @@ class SRyhmaFetcher(BaseProductFetcher):
             count = cur.fetchone()[0]
         
         return count > 0
+
+    def validate_fetch_response(self, response) -> dict:
+        """
+        Validates S-kaupat GraphQL API response.
+        
+        Checks:
+        - HTTP 200 status
+        - Response is valid JSON (not a Cloudflare challenge HTML page)
+        - No GraphQL errors in response
+        - Response contains expected nested structure: data.store.products.items
+        
+        Returns:
+            dict: Parsed JSON response data.
+            
+        Raises:
+            FetchResponseValidationError: If any validation check fails.
+        """
+        if response.status_code != 200:
+            raise FetchResponseValidationError(
+                f"S-kaupat API returned HTTP {response.status_code}"
+            )
+
+        try:
+            data = response.json()
+        except (ValueError, TypeError) as e:
+            snippet = response.text[:200] if response.text else "(empty)"
+            raise FetchResponseValidationError(
+                f"S-kaupat API response is not valid JSON (possible Cloudflare challenge). "
+                f"Response snippet: {snippet}"
+            ) from e
+
+        if 'errors' in data:
+            raise FetchResponseValidationError(
+                f"S-kaupat GraphQL returned errors: {data['errors']}"
+            )
+
+        # Validate nested structure: data -> store -> products -> items
+        if 'data' not in data:
+            raise FetchResponseValidationError(
+                f"S-kaupat API response missing 'data' key. Keys present: {list(data.keys())}"
+            )
+
+        store = data.get('data', {}).get('store')
+        if store is None:
+            raise FetchResponseValidationError(
+                "S-kaupat API response missing 'data.store' — store ID may be invalid"
+            )
+
+        products = store.get('products')
+        if products is None:
+            raise FetchResponseValidationError(
+                "S-kaupat API response missing 'data.store.products'"
+            )
+
+        if 'items' not in products or not isinstance(products['items'], list):
+            raise FetchResponseValidationError(
+                f"S-kaupat API response missing or invalid 'items'. Keys present: {list(products.keys())}"
+            )
+
+        return data
 
     def _extract_product_data(self, json_data: dict):
         extracted_data: list = []
@@ -75,29 +142,20 @@ class SRyhmaFetcher(BaseProductFetcher):
         
         return extracted_data
 
+    def _get_store_id(self) -> str:
+        """Returns the S-kaupat store ID from the S_KAUPAT_STORE_ID environment variable."""
+        store_id = os.environ.get('S_KAUPAT_STORE_ID')
+        if not store_id:
+            raise ValueError(
+                "S_KAUPAT_STORE_ID environment variable is not set. "
+                "Set it to the desired S-kaupat store ID (e.g. '513971200' for Prisma Kaari Kannelmäki)."
+            )
+        logger.info(f"Using S-kaupat store ID: {store_id}")
+        return store_id
+
     def _fetch_prices(self):
         base_url = "https://api.s-kaupat.fi/"
-        variables_template = {
-            "includeStoreEdgePricing": True,
-            "storeEdgeId": "513971200",
-            "facets": [
-                {"key": "brandName", "order": "asc"},
-                {"key": "category"},
-                {"key": "labels"}
-            ],
-            "generatedSessionId": str(uuid.uuid4()),
-            "includeAgeLimitedByAlcohol": True,
-            "limit": 24,
-            "queryString": "suodatinkahvi OR suodatinjauhatus",
-            "storeId": "726308750",
-            "useRandomId": False
-        }
-        extensions = {
-            "persistedQuery": {
-                "version": 1,
-                "sha256Hash": "abbeaf3143217630082d1c0ba36033999b196679bff4b310a0418e290c141426"
-            }
-        }
+        store_id = self._get_store_id()
 
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0',
@@ -105,42 +163,81 @@ class SRyhmaFetcher(BaseProductFetcher):
             'Content-Type': 'application/json',
             'Origin': 'https://www.s-kaupat.fi',
             'x-client-name': 'skaupat-web',
-            'x-client-version': 'production-e14c351ce120b6fca5d16451b7a06bae74b4b0f2'
         }
 
+        graphql_query = """
+            query RemoteFilteredProducts(
+                $storeId: ID!,
+                $queryString: String,
+                $limit: Int,
+                $from: Int
+            ) {
+                store(id: $storeId) {
+                    products(queryString: $queryString, limit: $limit, from: $from) {
+                        total
+                        items {
+                            id
+                            name
+                            price
+                            comparisonPrice
+                            comparisonUnit
+                            brandName
+                            pricing {
+                                regularPrice
+                                campaignPrice
+                                comparisonUnit
+                            }
+                        }
+                    }
+                }
+            }
+        """
+
+        # The inline GraphQL API does not support OR syntax in queryString,
+        # so we search each term separately and deduplicate by product ID.
+        search_terms = ["suodatinkahvi", "suodatinjauhatus"]
+        seen_ids = set()
         all_data = []
-        offset = 0
-        limit = variables_template["limit"]
 
-        scraper = cloudscraper.create_scraper()
+        for term in search_terms:
+            offset = 0
+            limit = 24
 
-        while True:
-            variables_template["from"] = offset
-            variables_str = urllib.parse.quote(json.dumps(variables_template))
-            extensions_str = urllib.parse.quote(json.dumps(extensions))
+            while True:
+                payload = {
+                    "operationName": "RemoteFilteredProducts",
+                    "variables": {
+                        "storeId": store_id,
+                        "queryString": term,
+                        "limit": limit,
+                        "from": offset
+                    },
+                    "query": graphql_query
+                }
 
-            url = f"{base_url}?operationName=RemoteFilteredProducts&variables={variables_str}&extensions={extensions_str}"
+                # Using curl_cffi with Firefox TLS fingerprint impersonation to bypass Cloudflare
+                response = cffi_requests.post(base_url, headers=headers, json=payload, impersonate="firefox")
+                logger.info(f"API call (term='{term}', offset={offset}) response code: {response.status_code}")
 
-            response = scraper.get(url, headers=headers)
-            print(f"API call (offset={offset}) response code: {response.status_code}")
+                json_data = self.validate_fetch_response(response)
+                product_data = self._extract_product_data(json_data)
 
-            if response.status_code != 200:
-                logger.exception(f"Failed to fetch S-ryhma data, status: {response.status_code}, full response: {response.text}")
+                # Deduplicate across search terms
+                for product in product_data:
+                    if product['id'] not in seen_ids:
+                        seen_ids.add(product['id'])
+                        all_data.append(product)
 
-            json_data = response.json()
-            product_data = self._extract_product_data(json_data)
-            all_data.extend(product_data)
+                # Pagination check
+                product_info = json_data["data"]["store"]["products"]
+                total = product_info["total"]
+                received = len(product_info["items"])
+                offset += received
 
-            # Pagination check
-            product_info = json_data["data"]["store"]["products"]
-            total = product_info["total"]
-            received = len(product_info["items"])
-            offset += received
+                logger.info(f"S-Ryhma API [{term}], fetched {received} products, unique so far: {len(all_data)}")
 
-            logger.info(f"S-Ryhma API, fetched {received} products, total so far: {len(all_data)}")
-
-            if offset >= total:
-                break
+                if offset >= total:
+                    break
 
         return all_data
 
@@ -285,6 +382,16 @@ class SRyhmaFetcher(BaseProductFetcher):
             ]
             execute_values(cur, insert_temp_query, records_for_temp)
 
+            # Count current rows in DB for comparison logging
+            cur.execute(
+                "SELECT COUNT(*) FROM products_and_prices WHERE tonno_end_ts IS NULL AND tonno_data_source = %s",
+                (self._data_source,)
+            )
+            existing_count = cur.fetchone()[0]
+            logger.info(
+                f"Comparing {len(product_data)} incoming products against {existing_count} existing active rows"
+            )
+
             # 1. Mark old versions as historical only where hash differs
             update_existing_query = """
                 UPDATE products_and_prices p
@@ -338,7 +445,9 @@ class SRyhmaFetcher(BaseProductFetcher):
 
         conn.commit()
 
-        return (f"Price update complete. Inserted: {inserted_count}, "
+        unchanged_count = len(product_data) - inserted_count
+        return (f"Price update complete. Incoming: {len(product_data)}, "
+                f"Unchanged: {unchanged_count}, Inserted: {inserted_count}, "
                 f"Updated (new version): {updated_count}, "
                 f"Disappeared: {disappeared_count}.")
 

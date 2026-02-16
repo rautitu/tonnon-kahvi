@@ -1,7 +1,16 @@
 from abc import ABC, abstractmethod
 from typing import List, Dict
+import logging
 import psycopg2
 import os
+
+logger = logging.getLogger("base-fetcher")
+
+
+class FetchResponseValidationError(Exception):
+    """Raised when an API response fails validation (e.g. missing keys, no products, Cloudflare challenge)."""
+    pass
+
 
 class BaseProductFetcher(ABC):
     """Defines basic operations for any fetcher per webshop"""
@@ -42,6 +51,28 @@ class BaseProductFetcher(ABC):
         
         Returns:
             bool: True if there are existing K-ruoka rows (>0), False if no rows (0)
+        """
+        pass
+
+    @abstractmethod
+    def validate_fetch_response(self, response) -> dict:
+        """
+        Validates an HTTP response from the store API and returns parsed JSON data.
+        
+        Each subclass implements store-specific validation:
+        - Check HTTP status code
+        - Verify the response is valid JSON (not a Cloudflare challenge page)
+        - Verify expected keys/structure exist in the response
+        - Verify that product data is present (non-empty)
+        
+        Args:
+            response: The HTTP response object from the API call.
+            
+        Returns:
+            dict: The parsed and validated JSON response data.
+            
+        Raises:
+            FetchResponseValidationError: If the response fails any validation check.
         """
         pass
 

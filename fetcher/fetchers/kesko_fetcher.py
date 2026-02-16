@@ -1,14 +1,14 @@
 import json
-import requests
 import datetime
-import cloudscraper
 import logging
 import hashlib
+
+from curl_cffi import requests as cffi_requests
 
 import psycopg2
 from psycopg2.extras import execute_values
 
-from fetcher.base_fetcher import BaseProductFetcher
+from fetcher.base_fetcher import BaseProductFetcher, FetchResponseValidationError
 
 # Configure logging to stdout (Docker captures this)
 logging.basicConfig(
@@ -41,6 +41,58 @@ class KRuokaFetcher(BaseProductFetcher):
             count = cur.fetchone()[0]
         
         return count > 0
+
+    def validate_fetch_response(self, response) -> dict:
+        """
+        Validates K-ruoka API response.
+        
+        Checks:
+        - HTTP 200 status
+        - Response is valid JSON (not a Cloudflare challenge HTML page)
+        - Response contains 'result' key with a non-empty list
+        - Response contains 'totalHits' for sanity checking
+        
+        Returns:
+            dict: Parsed JSON response data.
+            
+        Raises:
+            FetchResponseValidationError: If any validation check fails.
+        """
+        if response.status_code != 200:
+            raise FetchResponseValidationError(
+                f"K-Ruoka API returned HTTP {response.status_code}"
+            )
+
+        try:
+            data = response.json()
+        except (ValueError, TypeError) as e:
+            # Response is not JSON — likely a Cloudflare challenge page
+            snippet = response.text[:200] if response.text else "(empty)"
+            raise FetchResponseValidationError(
+                f"K-Ruoka API response is not valid JSON (possible Cloudflare challenge). "
+                f"Response snippet: {snippet}"
+            ) from e
+
+        if 'result' not in data:
+            raise FetchResponseValidationError(
+                f"K-Ruoka API response missing 'result' key. Keys present: {list(data.keys())}"
+            )
+
+        if not isinstance(data['result'], list):
+            raise FetchResponseValidationError(
+                f"K-Ruoka API 'result' is not a list, got: {type(data['result']).__name__}"
+            )
+
+        if len(data['result']) == 0:
+            logger.warning("K-Ruoka API returned 0 products — this may indicate an issue with the API or store ID")
+
+        total_hits = data.get('totalHits')
+        if total_hits is not None and total_hits != len(data['result']):
+            logger.warning(
+                f"K-Ruoka API totalHits ({total_hits}) differs from result count ({len(data['result'])})"
+            )
+
+        return data
 
     def _extract_product_data(self, json_data: dict):
         extracted_data: list = []
@@ -103,30 +155,27 @@ class KRuokaFetcher(BaseProductFetcher):
 
         #headers discovered with inspecting Network traffic and converting to cURL request
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0',
             'Accept': 'application/json',
             'X-K-Build-Number': '24596', #this is atleast crucial
             'Origin': 'https://www.k-ruoka.fi',
             'Referer': 'https://www.k-ruoka.fi/haku?q=suodatinkahvi',
-            'Accept-Language': 'en-US,en;q=0.5',
-            'Connection': 'keep-alive',
+            'Accept-Language': 'fi-FI,fi;q=0.9,en-US;q=0.8,en;q=0.7',
             'Sec-Fetch-Dest': 'empty',
             'Sec-Fetch-Mode': 'cors',
             'Sec-Fetch-Site': 'same-origin',
         }
 
-        #creating a cloudscraper instance instead of using requests directly to handle cloudflare JS challenge
-        scraper: cloudscraper.CloudScraper = cloudscraper.create_scraper()
-        response: requests.models.Response = scraper.post(url, headers=headers)
+        # Using curl_cffi with Firefox TLS fingerprint impersonation to bypass Cloudflare
+        # (cloudscraper no longer reliably passes Cloudflare's JS challenge for k-ruoka.fi)
+        response = cffi_requests.post(url, headers=headers, impersonate="firefox")
 
         logger.info(f"K-Ruoka API response code: {response.status_code}")
 
-        if response.status_code == 200:
-            logger.info("Successfully queried K-Ruoka API")
-            parsed_response: list = self._extract_product_data(response.json())
-            return parsed_response
-        else:
-            logger.exception(f"Failed to fetch data from K-Ruoka API, API response code: {response.status_code}, full response: {response.text}")
+        validated_data = self.validate_fetch_response(response)
+        logger.info(f"Successfully queried K-Ruoka API, {len(validated_data['result'])} products")
+        parsed_response: list = self._extract_product_data(validated_data)
+        return parsed_response
 
     def _insert_init_prices(self, conn, product_data: list[dict]) -> str:
         "Initial insert product data into products_and_prices table"
@@ -270,6 +319,16 @@ class KRuokaFetcher(BaseProductFetcher):
             ]
             execute_values(cur, insert_temp_query, records_for_temp)
 
+            # Count current rows in DB for comparison logging
+            cur.execute(
+                "SELECT COUNT(*) FROM products_and_prices WHERE tonno_end_ts IS NULL AND tonno_data_source = %s",
+                (self._data_source,)
+            )
+            existing_count = cur.fetchone()[0]
+            logger.info(
+                f"Comparing {len(product_data)} incoming products against {existing_count} existing active rows"
+            )
+
             # 1. Mark old versions as historical only where hash differs
             update_existing_query = """
                 UPDATE products_and_prices p
@@ -323,7 +382,9 @@ class KRuokaFetcher(BaseProductFetcher):
 
         conn.commit()
 
-        return (f"Price update complete. Inserted: {inserted_count}, "
+        unchanged_count = len(product_data) - inserted_count
+        return (f"Price update complete. Incoming: {len(product_data)}, "
+                f"Unchanged: {unchanged_count}, Inserted: {inserted_count}, "
                 f"Updated (new version): {updated_count}, "
                 f"Disappeared: {disappeared_count}.")
 
