@@ -382,6 +382,16 @@ class SRyhmaFetcher(BaseProductFetcher):
             ]
             execute_values(cur, insert_temp_query, records_for_temp)
 
+            # Count current rows in DB for comparison logging
+            cur.execute(
+                "SELECT COUNT(*) FROM products_and_prices WHERE tonno_end_ts IS NULL AND tonno_data_source = %s",
+                (self._data_source,)
+            )
+            existing_count = cur.fetchone()[0]
+            logger.info(
+                f"Comparing {len(product_data)} incoming products against {existing_count} existing active rows"
+            )
+
             # 1. Mark old versions as historical only where hash differs
             update_existing_query = """
                 UPDATE products_and_prices p
@@ -435,7 +445,9 @@ class SRyhmaFetcher(BaseProductFetcher):
 
         conn.commit()
 
-        return (f"Price update complete. Inserted: {inserted_count}, "
+        unchanged_count = len(product_data) - inserted_count
+        return (f"Price update complete. Incoming: {len(product_data)}, "
+                f"Unchanged: {unchanged_count}, Inserted: {inserted_count}, "
                 f"Updated (new version): {updated_count}, "
                 f"Disappeared: {disappeared_count}.")
 
