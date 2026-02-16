@@ -1,9 +1,9 @@
 import json
-import requests
 import datetime
-import cloudscraper
 import logging
 import hashlib
+
+from curl_cffi import requests as cffi_requests
 
 import psycopg2
 from psycopg2.extras import execute_values
@@ -103,21 +103,20 @@ class KRuokaFetcher(BaseProductFetcher):
 
         #headers discovered with inspecting Network traffic and converting to cURL request
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0',
             'Accept': 'application/json',
             'X-K-Build-Number': '24596', #this is atleast crucial
             'Origin': 'https://www.k-ruoka.fi',
             'Referer': 'https://www.k-ruoka.fi/haku?q=suodatinkahvi',
-            'Accept-Language': 'en-US,en;q=0.5',
-            'Connection': 'keep-alive',
+            'Accept-Language': 'fi-FI,fi;q=0.9,en-US;q=0.8,en;q=0.7',
             'Sec-Fetch-Dest': 'empty',
             'Sec-Fetch-Mode': 'cors',
             'Sec-Fetch-Site': 'same-origin',
         }
 
-        #creating a cloudscraper instance instead of using requests directly to handle cloudflare JS challenge
-        scraper: cloudscraper.CloudScraper = cloudscraper.create_scraper()
-        response: requests.models.Response = scraper.post(url, headers=headers)
+        # Using curl_cffi with Firefox TLS fingerprint impersonation to bypass Cloudflare
+        # (cloudscraper no longer reliably passes Cloudflare's JS challenge for k-ruoka.fi)
+        response = cffi_requests.post(url, headers=headers, impersonate="firefox")
 
         logger.info(f"K-Ruoka API response code: {response.status_code}")
 
