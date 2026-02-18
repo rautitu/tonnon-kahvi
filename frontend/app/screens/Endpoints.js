@@ -28,7 +28,7 @@ export default function Endpoints() {
 const styles = StyleSheet.create({
   container: {
     padding: 16,
-    backgroundColor: '#0d1117',
+    backgroundColor: '#131720',
     minHeight: '100%',
   },
   header: {

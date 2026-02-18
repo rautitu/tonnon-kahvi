@@ -29,7 +29,7 @@ export default function Coffees() {
 const styles = StyleSheet.create({
   container: {
     padding: 16,
-    backgroundColor: '#0d1117',
+    backgroundColor: '#131720',
     minHeight: '100%',
   },
   header: {
@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     padding: 12,
     borderBottomWidth: 1,
-    borderColor: '#30363d',
+    borderColor: '#3b4252',
   },
   name: {
     color: '#e6edf3',

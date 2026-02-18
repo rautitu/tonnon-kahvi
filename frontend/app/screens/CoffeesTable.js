@@ -102,7 +102,7 @@ const CoffeeTable = () => {
     <View
       style={[
         styles.row,
-        index % 2 === 0 && { backgroundColor: '#161b22' },
+        index % 2 === 0 && { backgroundColor: '#1c2129' },
         item.fl_deal_price === 1 && { backgroundColor: '#1b3a2d' }, // dark green for deals
       ]}
     >
@@ -136,14 +136,14 @@ const CoffeeTable = () => {
         <TextInput
           style={styles.filterInput}
           placeholder="Filter by name..."
-          placeholderTextColor="#484f58"
+          placeholderTextColor="#8b949e"
           value={filters.name}
           onChangeText={(text) => setFilters({...filters, name: text})}
         />
         <TextInput
           style={styles.filterInput}
           placeholder="Filter by data source..."
-          placeholderTextColor="#484f58"
+          placeholderTextColor="#8b949e"
           value={filters.dataSource}
           onChangeText={(text) => setFilters({...filters, dataSource: text})}
         />
@@ -151,7 +151,7 @@ const CoffeeTable = () => {
           <TextInput
             style={[styles.filterInput, styles.priceInput]}
             placeholder="Min price"
-            placeholderTextColor="#484f58"
+            placeholderTextColor="#8b949e"
             value={filters.minPrice}
             onChangeText={(text) => setFilters({...filters, minPrice: text})}
             keyboardType="numeric"
@@ -159,7 +159,7 @@ const CoffeeTable = () => {
           <TextInput
             style={[styles.filterInput, styles.priceInput]}
             placeholder="Max price"
-            placeholderTextColor="#484f58"
+            placeholderTextColor="#8b949e"
             value={filters.maxPrice}
             onChangeText={(text) => setFilters({...filters, maxPrice: text})}
             keyboardType="numeric"
@@ -185,15 +185,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#0d1117',
+    backgroundColor: '#131720',
   },
   filtersContainer: {
-    backgroundColor: '#161b22',
+    backgroundColor: '#1c2129',
     padding: 16,
     borderRadius: 8,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#30363d',
+    borderColor: '#3b4252',
   },
   filtersTitle: {
     fontSize: 18,
@@ -203,11 +203,11 @@ const styles = StyleSheet.create({
   },
   filterInput: {
     borderWidth: 1,
-    borderColor: '#30363d',
+    borderColor: '#3b4252',
     borderRadius: 6,
     padding: 8,
     marginBottom: 8,
-    backgroundColor: '#0d1117',
+    backgroundColor: '#131720',
     color: '#e6edf3',
   },
   priceFilters: {},
@@ -216,17 +216,17 @@ const styles = StyleSheet.create({
   },
   tableContainer: {
     flex: 1,
-    backgroundColor: '#0d1117',
+    backgroundColor: '#131720',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#30363d',
+    borderColor: '#3b4252',
     overflow: 'hidden',
   },
   headerRow: {
     flexDirection: 'row',
-    backgroundColor: '#161b22',
+    backgroundColor: '#1c2129',
     borderBottomWidth: 1,
-    borderBottomColor: '#30363d',
+    borderBottomColor: '#3b4252',
   },
   headerCell: {
     flex: 1,
@@ -245,8 +245,8 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     borderBottomWidth: 1,
-    borderBottomColor: '#21262d',
-    backgroundColor: '#0d1117',
+    borderBottomColor: '#272d37',
+    backgroundColor: '#131720',
   },
   cell: {
     flex: 1,

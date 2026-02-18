@@ -36,7 +36,7 @@ export default function Home({ navigation }) {
 const styles = StyleSheet.create({
   scrollContainer: {
     padding: 24,
-    backgroundColor: '#0d1117',
+    backgroundColor: '#131720',
     minHeight: '100%',
   },
   title: {
@@ -46,9 +46,9 @@ const styles = StyleSheet.create({
     color: '#e6edf3',
   },
   button: {
-    backgroundColor: '#21262d',
+    backgroundColor: '#272d37',
     borderWidth: 1,
-    borderColor: '#30363d',
+    borderColor: '#3b4252',
     borderRadius: 6,
     paddingVertical: 10,
     paddingHorizontal: 16,
