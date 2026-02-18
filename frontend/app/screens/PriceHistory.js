@@ -14,29 +14,80 @@ import { API_URL } from '../config';
 // Simple dropdown using a native <select> on web, or a basic picker-like component
 // For POC, we use a simple approach that works on web
 const Dropdown = ({ items, selectedValue, onValueChange, placeholder }) => {
+  const [searchText, setSearchText] = useState('');
+  const [isOpen, setIsOpen] = useState(false);
+
+  const filteredItems = useMemo(() => {
+    if (!searchText) return items;
+    const lower = searchText.toLowerCase();
+    return items.filter((item) => item.label.toLowerCase().includes(lower));
+  }, [items, searchText]);
+
+  const selectedLabel = useMemo(() => {
+    const found = items.find((i) => i.value === selectedValue);
+    return found ? found.label : '';
+  }, [items, selectedValue]);
+
   if (Platform.OS === 'web') {
     return (
-      <select
-        value={selectedValue || ''}
-        onChange={(e) => onValueChange(e.target.value)}
-        style={{
-          padding: 10,
-          fontSize: 16,
-          borderRadius: 4,
-          borderWidth: 1,
-          borderColor: '#ddd',
-          backgroundColor: 'white',
-          width: '100%',
-          marginBottom: 12,
-        }}
-      >
-        <option value="">{placeholder || 'Select...'}</option>
-        {items.map((item) => (
-          <option key={item.value} value={item.value}>
-            {item.label}
-          </option>
-        ))}
-      </select>
+      <View style={{ position: 'relative', marginBottom: 12, zIndex: 10 }}>
+        <input
+          type="text"
+          value={isOpen ? searchText : selectedLabel}
+          placeholder={placeholder || 'Search...'}
+          onFocus={() => { setIsOpen(true); setSearchText(''); }}
+          onBlur={() => setTimeout(() => setIsOpen(false), 200)}
+          onChange={(e) => setSearchText(e.target.value)}
+          style={{
+            padding: 10,
+            fontSize: 16,
+            borderRadius: 4,
+            border: '1px solid #ddd',
+            backgroundColor: 'white',
+            width: '100%',
+            boxSizing: 'border-box',
+          }}
+        />
+        {isOpen && (
+          <div
+            style={{
+              position: 'absolute',
+              top: '100%',
+              left: 0,
+              right: 0,
+              maxHeight: 250,
+              overflowY: 'auto',
+              backgroundColor: 'white',
+              border: '1px solid #ddd',
+              borderRadius: 4,
+              zIndex: 100,
+            }}
+          >
+            {filteredItems.length === 0 && (
+              <div style={{ padding: 10, color: '#888' }}>No results</div>
+            )}
+            {filteredItems.map((item) => (
+              <div
+                key={item.value}
+                onMouseDown={() => {
+                  onValueChange(item.value);
+                  setSearchText('');
+                  setIsOpen(false);
+                }}
+                style={{
+                  padding: 10,
+                  cursor: 'pointer',
+                  backgroundColor: item.value === selectedValue ? '#e3f2fd' : 'white',
+                }}
+                onMouseEnter={(e) => { e.target.style.backgroundColor = '#f0f0f0'; }}
+                onMouseLeave={(e) => { e.target.style.backgroundColor = item.value === selectedValue ? '#e3f2fd' : 'white'; }}
+              >
+                {item.label}
+              </div>
+            ))}
+          </div>
+        )}
+      </View>
     );
   }
 
@@ -117,7 +168,7 @@ export default function PriceHistory() {
 
     const labels = history.map((h) => {
       const d = new Date(h.valid_from);
-      return `${d.getDate()}.${d.getMonth() + 1}`;
+      return `${d.getDate()}.${d.getMonth() + 1}.${d.getFullYear()}`;
     });
 
     const prices = history.map((h) => h.normal_price ?? 0);
