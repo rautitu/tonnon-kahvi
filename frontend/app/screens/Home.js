@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Button, ScrollView  } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import axios from 'axios';
 import CoffeeTable from './CoffeesTable';
 import { API_URL } from '../config';
@@ -19,15 +19,12 @@ export default function Home({ navigation }) {
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <Text style={styles.title}>{message}</Text>
-      <Button title="View available endpoints" onPress={() => navigation.navigate('Endpoints')} />
-      <View style={{ marginTop: 10 }} />
-      <Button title="Price History" onPress={() => navigation.navigate('PriceHistory')} />
-      <View style={{ marginTop: 10 }} />
-      {/* Removed Coffees button */}
-      {/* <Button title="View coffee prices" onPress={() => navigation.navigate('Coffees')} /> */}
-      {/* Removed Coffees_v2 button */}
-      {/* <View style={{ marginTop: 10 }} />
-      <Button title="View coffee prices v2" onPress={() => navigation.navigate('Coffees_v2')} /> */}
+      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Endpoints')}>
+        <Text style={styles.buttonText}>View available endpoints</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('PriceHistory')}>
+        <Text style={styles.buttonText}>Price History</Text>
+      </TouchableOpacity>
 
       <View style={{ marginTop: 30 }}>
         <CoffeeTable />
@@ -37,12 +34,30 @@ export default function Home({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  scrollContainer: {
     padding: 24,
+    backgroundColor: '#131720',
+    minHeight: '100%',
   },
   title: {
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 20,
+    color: '#e6edf3',
+  },
+  button: {
+    backgroundColor: '#272d37',
+    borderWidth: 1,
+    borderColor: '#3b4252',
+    borderRadius: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    marginBottom: 10,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#58a6ff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
