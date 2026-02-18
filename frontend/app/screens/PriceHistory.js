@@ -11,8 +11,6 @@ import {
 import { LineChart } from 'react-native-chart-kit';
 import { API_URL } from '../config';
 
-// Simple dropdown using a native <select> on web, or a basic picker-like component
-// For POC, we use a simple approach that works on web
 const Dropdown = ({ items, selectedValue, onValueChange, placeholder }) => {
   const [searchText, setSearchText] = useState('');
   const [isOpen, setIsOpen] = useState(false);
@@ -41,11 +39,13 @@ const Dropdown = ({ items, selectedValue, onValueChange, placeholder }) => {
           style={{
             padding: 10,
             fontSize: 16,
-            borderRadius: 4,
-            border: '1px solid #ddd',
-            backgroundColor: 'white',
+            borderRadius: 6,
+            border: '1px solid #30363d',
+            backgroundColor: '#0d1117',
+            color: '#e6edf3',
             width: '100%',
             boxSizing: 'border-box',
+            outline: 'none',
           }}
         />
         {isOpen && (
@@ -57,14 +57,14 @@ const Dropdown = ({ items, selectedValue, onValueChange, placeholder }) => {
               right: 0,
               maxHeight: 250,
               overflowY: 'auto',
-              backgroundColor: 'white',
-              border: '1px solid #ddd',
-              borderRadius: 4,
+              backgroundColor: '#161b22',
+              border: '1px solid #30363d',
+              borderRadius: 6,
               zIndex: 100,
             }}
           >
             {filteredItems.length === 0 && (
-              <div style={{ padding: 10, color: '#888' }}>No results</div>
+              <div style={{ padding: 10, color: '#8b949e' }}>No results</div>
             )}
             {filteredItems.map((item) => (
               <div
@@ -77,10 +77,11 @@ const Dropdown = ({ items, selectedValue, onValueChange, placeholder }) => {
                 style={{
                   padding: 10,
                   cursor: 'pointer',
-                  backgroundColor: item.value === selectedValue ? '#e3f2fd' : 'white',
+                  color: '#e6edf3',
+                  backgroundColor: item.value === selectedValue ? '#1c2128' : '#161b22',
                 }}
-                onMouseEnter={(e) => { e.target.style.backgroundColor = '#f0f0f0'; }}
-                onMouseLeave={(e) => { e.target.style.backgroundColor = item.value === selectedValue ? '#e3f2fd' : 'white'; }}
+                onMouseEnter={(e) => { e.target.style.backgroundColor = '#21262d'; }}
+                onMouseLeave={(e) => { e.target.style.backgroundColor = item.value === selectedValue ? '#1c2128' : '#161b22'; }}
               >
                 {item.label}
               </div>
@@ -91,7 +92,7 @@ const Dropdown = ({ items, selectedValue, onValueChange, placeholder }) => {
     );
   }
 
-  // For native, fall back to buttons (or install @react-native-picker/picker)
+  // Native fallback
   return (
     <View style={styles.nativeDropdown}>
       <Text style={styles.dropdownPlaceholder}>{placeholder}</Text>
@@ -121,7 +122,6 @@ export default function PriceHistory() {
   const [productsLoading, setProductsLoading] = useState(true);
   const screenWidth = Dimensions.get('window').width;
 
-  // Fetch product list
   useEffect(() => {
     fetch(`${API_URL}/coffees/products`)
       .then((res) => res.json())
@@ -135,7 +135,6 @@ export default function PriceHistory() {
       });
   }, []);
 
-  // Fetch price history when product changes
   useEffect(() => {
     if (!selectedProduct) {
       setHistory([]);
@@ -154,7 +153,6 @@ export default function PriceHistory() {
       });
   }, [selectedProduct]);
 
-  // Prepare dropdown items
   const dropdownItems = useMemo(() => {
     return products.map((p) => ({
       label: `${p.name_finnish} (${p.data_source})`,
@@ -162,7 +160,6 @@ export default function PriceHistory() {
     }));
   }, [products]);
 
-  // Prepare chart data
   const chartData = useMemo(() => {
     if (history.length === 0) return null;
 
@@ -173,7 +170,6 @@ export default function PriceHistory() {
 
     const prices = history.map((h) => h.normal_price ?? 0);
 
-    // Limit labels to avoid crowding
     const maxLabels = 8;
     const step = Math.max(1, Math.floor(labels.length / maxLabels));
     const sparseLabels = labels.map((l, i) => (i % step === 0 ? l : ''));
@@ -183,7 +179,7 @@ export default function PriceHistory() {
       datasets: [
         {
           data: prices,
-          color: (opacity = 1) => `rgba(75, 122, 192, ${opacity})`,
+          color: (opacity = 1) => `rgba(88, 166, 255, ${opacity})`,
           strokeWidth: 2,
         },
       ],
@@ -195,7 +191,7 @@ export default function PriceHistory() {
       <Text style={styles.title}>Price History</Text>
 
       {productsLoading ? (
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color="#58a6ff" />
       ) : (
         <Dropdown
           items={dropdownItems}
@@ -205,7 +201,7 @@ export default function PriceHistory() {
         />
       )}
 
-      {loading && <ActivityIndicator size="large" style={{ marginTop: 20 }} />}
+      {loading && <ActivityIndicator size="large" color="#58a6ff" style={{ marginTop: 20 }} />}
 
       {/* Chart */}
       {chartData && !loading && (
@@ -220,17 +216,21 @@ export default function PriceHistory() {
               height={260}
               yAxisSuffix=" €"
               chartConfig={{
-                backgroundColor: '#ffffff',
-                backgroundGradientFrom: '#ffffff',
-                backgroundGradientTo: '#f5f5f5',
+                backgroundColor: '#0d1117',
+                backgroundGradientFrom: '#161b22',
+                backgroundGradientTo: '#0d1117',
                 decimalPlaces: 2,
-                color: (opacity = 1) => `rgba(75, 122, 192, ${opacity})`,
-                labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+                color: (opacity = 1) => `rgba(88, 166, 255, ${opacity})`,
+                labelColor: (opacity = 1) => `rgba(139, 148, 158, ${opacity})`,
                 style: { borderRadius: 8 },
                 propsForDots: {
                   r: '4',
                   strokeWidth: '1',
-                  stroke: '#4b7ac0',
+                  stroke: '#58a6ff',
+                },
+                propsForBackgroundLines: {
+                  stroke: '#21262d',
+                  strokeWidth: 1,
                 },
               }}
               bezier
@@ -245,7 +245,6 @@ export default function PriceHistory() {
         <View style={styles.tableContainer}>
           <Text style={styles.sectionTitle}>Data points</Text>
 
-          {/* Header */}
           <View style={styles.tableHeader}>
             <Text style={[styles.tableHeaderCell, { flex: 2 }]}>From</Text>
             <Text style={[styles.tableHeaderCell, { flex: 2 }]}>To</Text>
@@ -253,13 +252,12 @@ export default function PriceHistory() {
             <Text style={styles.tableHeaderCell}>€/kg</Text>
           </View>
 
-          {/* Rows */}
           {history.map((row, index) => (
             <View
               key={index}
               style={[
                 styles.tableRow,
-                index % 2 === 0 && { backgroundColor: '#f9f9f9' },
+                index % 2 === 0 && { backgroundColor: '#161b22' },
               ]}
             >
               <Text style={[styles.tableCell, { flex: 2 }]}>
@@ -292,43 +290,41 @@ const styles = StyleSheet.create({
   container: {
     padding: 16,
     paddingBottom: 40,
+    backgroundColor: '#0d1117',
+    minHeight: '100%',
   },
   title: {
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 16,
+    color: '#e6edf3',
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 10,
+    color: '#e6edf3',
   },
   chartContainer: {
     marginTop: 16,
-    backgroundColor: 'white',
+    backgroundColor: '#161b22',
     borderRadius: 8,
     padding: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#30363d',
   },
   tableContainer: {
     marginTop: 20,
-    backgroundColor: 'white',
+    backgroundColor: '#0d1117',
     borderRadius: 8,
     padding: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#30363d',
   },
   tableHeader: {
     flexDirection: 'row',
     borderBottomWidth: 2,
-    borderBottomColor: '#ddd',
+    borderBottomColor: '#30363d',
     paddingBottom: 8,
     marginBottom: 4,
   },
@@ -337,41 +333,46 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 13,
     textAlign: 'center',
+    color: '#e6edf3',
   },
   tableRow: {
     flexDirection: 'row',
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: '#21262d',
+    backgroundColor: '#0d1117',
   },
   tableCell: {
     flex: 1,
     fontSize: 13,
     textAlign: 'center',
+    color: '#c9d1d9',
   },
   noData: {
     marginTop: 20,
     fontSize: 16,
-    color: '#888',
+    color: '#8b949e',
     textAlign: 'center',
   },
   nativeDropdown: {
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 4,
+    borderColor: '#30363d',
+    borderRadius: 6,
     padding: 8,
     marginBottom: 12,
+    backgroundColor: '#161b22',
   },
   dropdownPlaceholder: {
-    color: '#888',
+    color: '#8b949e',
     marginBottom: 8,
   },
   dropdownItem: {
     padding: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: '#21262d',
+    color: '#e6edf3',
   },
   dropdownItemSelected: {
-    backgroundColor: '#e3f2fd',
+    backgroundColor: '#1c2128',
   },
 });
