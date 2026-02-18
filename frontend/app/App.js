@@ -14,10 +14,10 @@ const AppDarkTheme = {
   colors: {
     ...DarkTheme.colors,
     primary: '#58a6ff',
-    background: '#0d1117',
-    card: '#161b22',
+    background: '#131720',
+    card: '#1c2129',
     text: '#e6edf3',
-    border: '#30363d',
+    border: '#3b4252',
     notification: '#58a6ff',
   },
 };
@@ -30,7 +30,7 @@ export default function App() {
       <Stack.Navigator
         initialRouteName="Home"
         screenOptions={{
-          headerStyle: { backgroundColor: '#161b22' },
+          headerStyle: { backgroundColor: '#1c2129' },
           headerTintColor: '#e6edf3',
           headerTitleStyle: { fontWeight: 'bold' },
         }}

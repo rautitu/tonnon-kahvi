@@ -40,8 +40,8 @@ const Dropdown = ({ items, selectedValue, onValueChange, placeholder }) => {
             padding: 10,
             fontSize: 16,
             borderRadius: 6,
-            border: '1px solid #30363d',
-            backgroundColor: '#0d1117',
+            border: '1px solid #3b4252',
+            backgroundColor: '#131720',
             color: '#e6edf3',
             width: '100%',
             boxSizing: 'border-box',
@@ -57,8 +57,8 @@ const Dropdown = ({ items, selectedValue, onValueChange, placeholder }) => {
               right: 0,
               maxHeight: 250,
               overflowY: 'auto',
-              backgroundColor: '#161b22',
-              border: '1px solid #30363d',
+              backgroundColor: '#1c2129',
+              border: '1px solid #3b4252',
               borderRadius: 6,
               zIndex: 100,
             }}
@@ -78,10 +78,10 @@ const Dropdown = ({ items, selectedValue, onValueChange, placeholder }) => {
                   padding: 10,
                   cursor: 'pointer',
                   color: '#e6edf3',
-                  backgroundColor: item.value === selectedValue ? '#1c2128' : '#161b22',
+                  backgroundColor: item.value === selectedValue ? '#242b35' : '#1c2129',
                 }}
-                onMouseEnter={(e) => { e.target.style.backgroundColor = '#21262d'; }}
-                onMouseLeave={(e) => { e.target.style.backgroundColor = item.value === selectedValue ? '#1c2128' : '#161b22'; }}
+                onMouseEnter={(e) => { e.target.style.backgroundColor = '#272d37'; }}
+                onMouseLeave={(e) => { e.target.style.backgroundColor = item.value === selectedValue ? '#242b35' : '#1c2129'; }}
               >
                 {item.label}
               </div>
@@ -179,7 +179,7 @@ export default function PriceHistory() {
       datasets: [
         {
           data: prices,
-          color: (opacity = 1) => `rgba(88, 166, 255, ${opacity})`,
+          color: (opacity = 1) => `rgba(124, 230, 191, ${opacity})`,
           strokeWidth: 2,
         },
       ],
@@ -216,20 +216,20 @@ export default function PriceHistory() {
               height={260}
               yAxisSuffix=" €"
               chartConfig={{
-                backgroundColor: '#0d1117',
-                backgroundGradientFrom: '#161b22',
-                backgroundGradientTo: '#0d1117',
+                backgroundColor: '#131720',
+                backgroundGradientFrom: '#1c2129',
+                backgroundGradientTo: '#131720',
                 decimalPlaces: 2,
-                color: (opacity = 1) => `rgba(88, 166, 255, ${opacity})`,
+                color: (opacity = 1) => `rgba(124, 230, 191, ${opacity})`,
                 labelColor: (opacity = 1) => `rgba(139, 148, 158, ${opacity})`,
                 style: { borderRadius: 8 },
                 propsForDots: {
                   r: '4',
                   strokeWidth: '1',
-                  stroke: '#58a6ff',
+                  stroke: '#7ce6bf',
                 },
                 propsForBackgroundLines: {
-                  stroke: '#21262d',
+                  stroke: '#272d37',
                   strokeWidth: 1,
                 },
               }}
@@ -257,7 +257,7 @@ export default function PriceHistory() {
               key={index}
               style={[
                 styles.tableRow,
-                index % 2 === 0 && { backgroundColor: '#161b22' },
+                index % 2 === 0 && { backgroundColor: '#1c2129' },
               ]}
             >
               <Text style={[styles.tableCell, { flex: 2 }]}>
@@ -290,7 +290,7 @@ const styles = StyleSheet.create({
   container: {
     padding: 16,
     paddingBottom: 40,
-    backgroundColor: '#0d1117',
+    backgroundColor: '#131720',
     minHeight: '100%',
   },
   title: {
@@ -307,24 +307,24 @@ const styles = StyleSheet.create({
   },
   chartContainer: {
     marginTop: 16,
-    backgroundColor: '#161b22',
+    backgroundColor: '#1c2129',
     borderRadius: 8,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#30363d',
+    borderColor: '#3b4252',
   },
   tableContainer: {
     marginTop: 20,
-    backgroundColor: '#0d1117',
+    backgroundColor: '#131720',
     borderRadius: 8,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#30363d',
+    borderColor: '#3b4252',
   },
   tableHeader: {
     flexDirection: 'row',
     borderBottomWidth: 2,
-    borderBottomColor: '#30363d',
+    borderBottomColor: '#3b4252',
     paddingBottom: 8,
     marginBottom: 4,
   },
@@ -339,8 +339,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#21262d',
-    backgroundColor: '#0d1117',
+    borderBottomColor: '#272d37',
+    backgroundColor: '#131720',
   },
   tableCell: {
     flex: 1,
@@ -356,11 +356,11 @@ const styles = StyleSheet.create({
   },
   nativeDropdown: {
     borderWidth: 1,
-    borderColor: '#30363d',
+    borderColor: '#3b4252',
     borderRadius: 6,
     padding: 8,
     marginBottom: 12,
-    backgroundColor: '#161b22',
+    backgroundColor: '#1c2129',
   },
   dropdownPlaceholder: {
     color: '#8b949e',
@@ -369,10 +369,10 @@ const styles = StyleSheet.create({
   dropdownItem: {
     padding: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#21262d',
+    borderBottomColor: '#272d37',
     color: '#e6edf3',
   },
   dropdownItemSelected: {
-    backgroundColor: '#1c2128',
+    backgroundColor: '#242b35',
   },
 });
