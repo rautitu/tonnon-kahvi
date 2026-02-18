@@ -12,7 +12,7 @@ import { API_URL, MOBILE_SCREEN_WIDTH_THRESHOLD } from '../config';
 
 const CoffeeTable = () => {
   const [coffeeData, setCoffeeData] = useState([]);
-  const [sortConfig, setSortConfig] = useState({ key: "price_per_weight", direction: 'asc' }); //defaulting the sort to be from smallest price per weight
+  const [sortConfig, setSortConfig] = useState({ key: "price_per_weight", direction: 'asc' });
   const [filters, setFilters] = useState({
     name: '',
     dataSource: '',
@@ -21,19 +21,15 @@ const CoffeeTable = () => {
   });
   const [screenWidth, setScreenWidth] = useState(Dimensions.get('window').width);
 
-  // Listen for screen dimension changes
   useEffect(() => {
     const subscription = Dimensions.addEventListener('change', ({ window }) => {
       setScreenWidth(window.width);
     });
-
     return () => subscription?.remove();
   }, []);
 
-  // Determine if we should show mobile layout (hide Price and Weight columns)
   const isMobile = screenWidth < MOBILE_SCREEN_WIDTH_THRESHOLD;
 
-  // Fetch data from your backend 
   useEffect(() => {
     fetchCoffeeData();
   }, []);
@@ -48,114 +44,81 @@ const CoffeeTable = () => {
     }
   };
 
-  // Sorting logic
   const sortedAndFilteredData = useMemo(() => {
     let filtered = coffeeData.filter(item => {
       const matchesName = item.name_finnish.toLowerCase().includes(filters.name.toLowerCase());
       const matchesDataSource = item.data_source.toLowerCase().includes(filters.dataSource.toLowerCase());
       const matchesMinPrice = filters.minPrice === '' || item.normal_price >= parseFloat(filters.minPrice);
       const matchesMaxPrice = filters.maxPrice === '' || item.normal_price <= parseFloat(filters.maxPrice);
-      
       return matchesName && matchesDataSource && matchesMinPrice && matchesMaxPrice;
     });
 
     if (sortConfig.key) {
       filtered.sort((a, b) => {
-        if (a[sortConfig.key] < b[sortConfig.key]) {
-          return sortConfig.direction === 'asc' ? -1 : 1;
-        }
-        if (a[sortConfig.key] > b[sortConfig.key]) {
-          return sortConfig.direction === 'asc' ? 1 : -1;
-        }
+        if (a[sortConfig.key] < b[sortConfig.key]) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (a[sortConfig.key] > b[sortConfig.key]) return sortConfig.direction === 'asc' ? 1 : -1;
         return 0;
       });
     }
-
     return filtered;
   }, [coffeeData, sortConfig, filters]);
 
   const handleSort = (key) => {
     let direction = 'asc';
-    if (sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
-    }
+    if (sortConfig.key === key && sortConfig.direction === 'asc') direction = 'desc';
     setSortConfig({ key, direction });
   };
 
   const getSortIcon = (columnKey) => {
-    if (sortConfig.key === columnKey) {
-      return sortConfig.direction === 'asc' ? '↑' : '↓';
-    }
+    if (sortConfig.key === columnKey) return sortConfig.direction === 'asc' ? '↑' : '↓';
     return '↕';
   };
 
   const TableHeader = () => (
     <View style={styles.headerRow}>
-      <TouchableOpacity 
-        style={styles.headerCell} 
-        onPress={() => handleSort('name_finnish')}
-      >
+      <TouchableOpacity style={styles.headerCell} onPress={() => handleSort('name_finnish')}>
         <Text style={styles.headerText}>Name {getSortIcon('name_finnish')}</Text>
       </TouchableOpacity>
-      
-      {/* Hide Price column on mobile */}
       {!isMobile && (
-        <TouchableOpacity 
-          style={styles.headerCell} 
-          onPress={() => handleSort('normal_price')}
-        >
+        <TouchableOpacity style={styles.headerCell} onPress={() => handleSort('normal_price')}>
           <Text style={styles.headerText}>Price {getSortIcon('normal_price')}</Text>
         </TouchableOpacity>
       )}
-      
-      {/* Hide Weight column on mobile */}
       {!isMobile && (
-        <TouchableOpacity 
-          style={styles.headerCell} 
-          onPress={() => handleSort('net_weight')}
-        >
+        <TouchableOpacity style={styles.headerCell} onPress={() => handleSort('net_weight')}>
           <Text style={styles.headerText}>Weight {getSortIcon('net_weight')}</Text>
         </TouchableOpacity>
       )}
-      
-      <TouchableOpacity 
-        style={styles.headerCell} 
-        onPress={() => handleSort('price_per_weight')}
-      >
+      <TouchableOpacity style={styles.headerCell} onPress={() => handleSort('price_per_weight')}>
         <Text style={styles.headerText}>Price per weight {getSortIcon('price_per_weight')}</Text>
       </TouchableOpacity>
-      <TouchableOpacity 
-        style={styles.headerCell} 
-        onPress={() => handleSort('data_source')}
-      >        
+      <TouchableOpacity style={styles.headerCell} onPress={() => handleSort('data_source')}>
         <Text style={styles.headerText}>Source {getSortIcon('data_source')}</Text>
       </TouchableOpacity>
     </View>
   );
 
-  const renderRow = ({ item }) => (
+  const renderRow = ({ item, index }) => (
     <View
       style={[
         styles.row,
-        item.fl_deal_price === 1 && { backgroundColor: '#d9fdd3' } // light green
+        index % 2 === 0 && { backgroundColor: '#161b22' },
+        item.fl_deal_price === 1 && { backgroundColor: '#1b3a2d' }, // dark green for deals
       ]}
     >
       <View style={styles.cell}>
         <Text style={styles.cellText}>{item.name_finnish}</Text>
       </View>
-      
       {!isMobile && (
         <View style={styles.cell}>
           <Text style={styles.cellText}>{item.normal_price.toFixed(2)} €</Text>
         </View>
       )}
-      
       {!isMobile && (
         <View style={styles.cell}>
           <Text style={styles.cellText}>{item.net_weight.toFixed(2)} kg</Text>
         </View>
       )}
-      
       <View style={styles.cell}>
         <Text style={styles.cellText}>{item.price_per_weight.toFixed(2)} € / kg</Text>
       </View>
@@ -173,12 +136,14 @@ const CoffeeTable = () => {
         <TextInput
           style={styles.filterInput}
           placeholder="Filter by name..."
+          placeholderTextColor="#484f58"
           value={filters.name}
           onChangeText={(text) => setFilters({...filters, name: text})}
         />
         <TextInput
           style={styles.filterInput}
           placeholder="Filter by data source..."
+          placeholderTextColor="#484f58"
           value={filters.dataSource}
           onChangeText={(text) => setFilters({...filters, dataSource: text})}
         />
@@ -186,6 +151,7 @@ const CoffeeTable = () => {
           <TextInput
             style={[styles.filterInput, styles.priceInput]}
             placeholder="Min price"
+            placeholderTextColor="#484f58"
             value={filters.minPrice}
             onChangeText={(text) => setFilters({...filters, minPrice: text})}
             keyboardType="numeric"
@@ -193,6 +159,7 @@ const CoffeeTable = () => {
           <TextInput
             style={[styles.filterInput, styles.priceInput]}
             placeholder="Max price"
+            placeholderTextColor="#484f58"
             value={filters.maxPrice}
             onChangeText={(text) => setFilters({...filters, maxPrice: text})}
             keyboardType="numeric"
@@ -218,55 +185,48 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#0d1117',
   },
   filtersContainer: {
-    backgroundColor: 'white',
+    backgroundColor: '#161b22',
     padding: 16,
     borderRadius: 8,
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#30363d',
   },
   filtersTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 12,
+    color: '#e6edf3',
   },
   filterInput: {
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 4,
+    borderColor: '#30363d',
+    borderRadius: 6,
     padding: 8,
     marginBottom: 8,
-    backgroundColor: 'white',
+    backgroundColor: '#0d1117',
+    color: '#e6edf3',
   },
-  priceFilters: {
-    //flexDirection: 'row',
-    //justifyContent: 'space-between',
-  },
+  priceFilters: {},
   priceInput: {
-    //flex: 0.48,
     marginBottom: 8,
   },
   tableContainer: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: '#0d1117',
     borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#30363d',
+    overflow: 'hidden',
   },
   headerRow: {
     flexDirection: 'row',
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#161b22',
     borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
+    borderBottomColor: '#30363d',
   },
   headerCell: {
     flex: 1,
@@ -277,6 +237,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 14,
     textAlign: 'center',
+    color: '#e6edf3',
   },
   table: {
     flex: 1,
@@ -284,7 +245,8 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: '#21262d',
+    backgroundColor: '#0d1117',
   },
   cell: {
     flex: 1,
@@ -294,6 +256,7 @@ const styles = StyleSheet.create({
   cellText: {
     fontSize: 14,
     textAlign: 'center',
+    color: '#c9d1d9',
   },
 });
 
