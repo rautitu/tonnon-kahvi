@@ -21,6 +21,8 @@ export default function Home({ navigation }) {
       <Text style={styles.title}>{message}</Text>
       <Button title="View available endpoints" onPress={() => navigation.navigate('Endpoints')} />
       <View style={{ marginTop: 10 }} />
+      <Button title="Price History" onPress={() => navigation.navigate('PriceHistory')} />
+      <View style={{ marginTop: 10 }} />
       {/* Removed Coffees button */}
       {/* <Button title="View coffee prices" onPress={() => navigation.navigate('Coffees')} /> */}
       {/* Removed Coffees_v2 button */}
