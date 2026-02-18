@@ -6,6 +6,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 // screens
 import Home from './screens/Home';
 import Endpoints from './screens/Endpoints';
+import PriceHistory from './screens/PriceHistory';
 //import Coffees from './screens/Coffees';
 //import Coffees_v2 from './screens/Coffees_v2';
 
@@ -18,6 +19,7 @@ export default function App() {
       <Stack.Navigator initialRouteName="Home">
         <Stack.Screen name="Home" component={Home} />
         <Stack.Screen name="Endpoints" component={Endpoints} />
+        <Stack.Screen name="PriceHistory" component={PriceHistory} options={{ title: 'Price History' }} />
         {// <Stack.Screen name="Coffees" component={Coffees} />
         }
         {// <Stack.Screen name="Coffees_v2" component={Coffees_v2} />
