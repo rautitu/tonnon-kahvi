@@ -38,7 +38,7 @@ app.add_middleware(
 
 @app.get("/")
 def root():
-    return {"message": "Hello, welcome to tonnon-kahvi!"}
+    return {"message": "Welcome to tonnon-kahvi! Your one and only source for coffee prices in Finland!"}
 
 @app.get("/endpoints")
 def get_all_endpoints():
