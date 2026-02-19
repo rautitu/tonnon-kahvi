@@ -19,9 +19,10 @@ export default function Home({ navigation }) {
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <Text style={styles.title}>{message}</Text>
-      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Endpoints')}>
-        <Text style={styles.buttonText}>View available endpoints</Text>
-      </TouchableOpacity>
+      //endpoints button hidden for now, could be shown for testing purposes
+      //<TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Endpoints')}>
+      //  <Text style={styles.buttonText}>View available endpoints</Text>
+      //</TouchableOpacity>
       <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('PriceHistory')}>
         <Text style={styles.buttonText}>Price History</Text>
       </TouchableOpacity>
