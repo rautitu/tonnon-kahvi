@@ -26,6 +26,9 @@ export default function Home({ navigation }) {
       <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('PriceHistory')}>
         <Text style={styles.buttonText}>Price History</Text>
       </TouchableOpacity>
+      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('LatestPriceChanges')}>
+        <Text style={styles.buttonText}>Latest Price Changes</Text>
+      </TouchableOpacity>
 
       <View style={{ marginTop: 30 }}>
         <CoffeeTable />
