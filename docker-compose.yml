@@ -33,10 +33,7 @@ services:
       context: .
       dockerfile: frontend/Dockerfile
     ports:
-      - "49100:19000"  # Expo dev tools
-      - "49101:19001"  # Packager
-      - "49102:19002"  # Expo dev server
-      - "49106:19006"  # Web interface
+      - "49106:19006"  # Web interface (Caddy proxies to this)
     volumes:
       - ./frontend:/app
       - /app/node_modules  # Prevent host node_modules from overwriting container's
