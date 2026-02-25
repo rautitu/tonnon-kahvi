@@ -7,6 +7,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Home from './screens/Home';
 import Endpoints from './screens/Endpoints';
 import PriceHistory from './screens/PriceHistory';
+import LatestPriceChanges from './screens/LatestPriceChanges';
 
 // Dark theme matching our palette
 const AppDarkTheme = {
@@ -38,6 +39,7 @@ export default function App() {
         <Stack.Screen name="Home" component={Home} />
         <Stack.Screen name="Endpoints" component={Endpoints} />
         <Stack.Screen name="PriceHistory" component={PriceHistory} options={{ title: 'Price History' }} />
+        <Stack.Screen name="LatestPriceChanges" component={LatestPriceChanges} options={{ title: 'Latest Price Changes' }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

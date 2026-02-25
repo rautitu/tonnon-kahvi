@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routers.get_coffee_prices import router as coffee_router
 from routers.get_price_history import router as history_router
+from routers.get_latest_price_changes import router as latest_changes_router
 from fastapi.routing import APIRoute
 
 #frontend will be running on same machine as the backend -> get curr machine IP to be allowed in CORS
@@ -26,6 +27,7 @@ app = FastAPI(title="Tonno coffee API")
 
 app.include_router(coffee_router)
 app.include_router(history_router)
+app.include_router(latest_changes_router)
 
 app.add_middleware(
     CORSMiddleware,
