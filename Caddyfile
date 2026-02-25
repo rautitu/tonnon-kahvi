@@ -1,3 +1,0 @@
-kahvi.tonnopannu.duckdns.org {
-	reverse_proxy frontend:19006
-}
