@@ -32,6 +32,8 @@ services:
     build:
       context: .
       dockerfile: frontend/Dockerfile
+    ports:
+      - "49106:19006"  # Web interface (external Caddy proxy routes here via kahvi.tonnopannu.duckdns.org)
     volumes:
       - ./frontend:/app
       - /app/node_modules  # Prevent host node_modules from overwriting container's
@@ -39,20 +41,6 @@ services:
     tty: true
     environment:
       - WEB_HOST=0.0.0.0
-    restart: unless-stopped
-
-  caddy:
-    image: caddy:2-alpine
-    depends_on:
-      - frontend
-    ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
     restart: unless-stopped
 
   db:
@@ -70,5 +58,3 @@ services:
 
 volumes:
   db_data:
-  caddy_data:
-  caddy_config:
