@@ -17,8 +17,11 @@ const Dropdown = ({ items, selectedValue, onValueChange, placeholder }) => {
 
   const filteredItems = useMemo(() => {
     if (!searchText) return items;
-    const lower = searchText.toLowerCase();
-    return items.filter((item) => item.label.toLowerCase().includes(lower));
+    const words = searchText.toLowerCase().split(/\s+/).filter(Boolean);
+    return items.filter((item) => {
+      const label = item.label.toLowerCase();
+      return words.every((word) => label.includes(word));
+    });
   }, [items, searchText]);
 
   const selectedLabel = useMemo(() => {
