@@ -36,7 +36,7 @@ export default function App() {
           headerTitleStyle: { fontWeight: 'bold' },
         }}
       >
-        <Stack.Screen name="Home" component={Home} />
+        <Stack.Screen name="Home" component={Home} options={{ title: 'tonnon-kahvi' }} />
         <Stack.Screen name="Endpoints" component={Endpoints} />
         <Stack.Screen name="PriceHistory" component={PriceHistory} options={{ title: 'Price History' }} />
         <Stack.Screen name="LatestPriceChanges" component={LatestPriceChanges} options={{ title: 'Latest Price Changes' }} />
